@@ -12,7 +12,7 @@ class RabbitController(object):
         self.QUEUE_NAME_COLOR = 'MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain_colorCommand'
         self.QUEUE_NAME_HEART = 'MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain_heartRateCommand'
         self.QUEUE_NAME_STATE = 'MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain_meditationStateCommand'
-        self.QUEUE_NAME_EEGDATA = 'MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain_eegdataCommand'
+        self.QUEUE_NAME_EEGDATA = 'MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain_eegDataCommand'
         self.EXCHANGE_STATE = 'MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain'
         self.EXCHANGE_COLOR = 'MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain'
         self.EXCHANGE_HEART = 'MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain'
@@ -31,7 +31,7 @@ class RabbitController(object):
         try:
             new_channel = self.open_channel()
             new_channel.queue_declare(queue=queue_name)
-            new_channel.basic_consume(callback, queue=queue_name, no_ack=True)
+            new_channel.basic_consume(queue_name, callback, auto_ack=True)
             new_channel.start_consuming()
 
             logging.info("waiting for {consume_target_str} state messages..".format(
@@ -71,37 +71,37 @@ class RabbitController(object):
             return None
 
     def subscribe_meditation(self, callback):
-        self._base_subscribe("meditation state", self.EXCHANGE_STATE, callback)
+        self._base_subscribe("meditation state", self.QUEUE_NAME_STATE, callback)
 
     def subscribe_heart_rate(self, callback):
-        self._base_subscribe("heart rate", self.EXCHANGE_HEART, callback)
+        self._base_subscribe("heart rate", self.QUEUE_NAME_HEART, callback)
 
     def subscribe_eegdata(self, callback):
-        self._base_subscribe("EEG data", self.EXCHANGE_EEGDATA, callback)
+        self._base_subscribe("EEG data", self.QUEUE_NAME_EEGDATA, callback)
 
     def publish_color(self, color):
         color_command = ColorControlCommand(color.red, color.green, color.blue)
-        self._base_publish(self.EXCHANGE_COLOR, self.color_props, color_command)
+        self._base_publish(self.QUEUE_NAME_COLOR, self.color_props, color_command)
 
         logging.info("sent color message (Red: {red}, Blue: {blue}, Green: {green})".format(
             red=color.red, green=color.green, blue=color.blue))
 
     def publish_heart(self, heartbeat):
         heart_command = HeartRateCommand(heartbeat)
-        self._base_publish(self.EXCHANGE_HEART, self.heart_props, heart_command)
+        self._base_publish(self.QUEUE_NAME_HEART, self.heart_props, heart_command)
 
         logging.info("sent heart rate message {heartbeat}".format(heartbeat=heartbeat))
 
     def publish_state(self, meditation_state):
         state_command = MeditationStateCommand(meditation_state)
-        self._base_publish(self.EXCHANGE_STATE, self.state_props, state_command)
+        self._base_publish(self.QUEUE_NAME_STATE, self.state_props, state_command)
 
         logging.info("sent meditation state message {meditation_state}".format(
             meditation_state=meditation_state))
 
     def publish_eegdata(self, eegdata_values):
         eegdata_command = EEGDataCommand(eegdata_values)
-        self._base_publish(self.EXCHANGE_EEGDATA, self.eegdata_props, eegdata_command)
+        self._base_publish(self.QUEUE_NAME_EEGDATA, self.eegdata_props, eegdata_command)
 
         logging.info("sent eegdata message {eegdata_values}".format(eegdata_values=eegdata_values))
 
