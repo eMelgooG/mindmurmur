@@ -1,17 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2042
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindMurmur.Lights", "MindMurmur.Lights\MindMurmur.Lights.csproj", "{38CDACF5-5DD3-492C-90DC-6A414FE0673B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindMurmur.Lights.Tests", "MindMurmur.Lights.Tests\MindMurmur.Lights.Tests.csproj", "{6F42BCC8-7B45-4DD1-958C-08702E4A1BA2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindMurmur.Domain", "MindMurmur.Domain\MindMurmur.Domain.csproj", "{5B1F6C56-7315-419B-8859-40F25F6E94E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickDmx", "QuickDmx\QuickDmx.csproj", "{FF865756-5E9B-4DAE-AC4C-F27161381E84}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindMurmur.Lights.Monitor", "MindMurmur.Lights.Monitor\MindMurmur.Lights.Monitor.csproj", "{9D24ACDA-6A06-4473-8B5E-56DA0AEE70BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +19,6 @@ Global
 		{38CDACF5-5DD3-492C-90DC-6A414FE0673B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38CDACF5-5DD3-492C-90DC-6A414FE0673B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38CDACF5-5DD3-492C-90DC-6A414FE0673B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F42BCC8-7B45-4DD1-958C-08702E4A1BA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F42BCC8-7B45-4DD1-958C-08702E4A1BA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F42BCC8-7B45-4DD1-958C-08702E4A1BA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F42BCC8-7B45-4DD1-958C-08702E4A1BA2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5B1F6C56-7315-419B-8859-40F25F6E94E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5B1F6C56-7315-419B-8859-40F25F6E94E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B1F6C56-7315-419B-8859-40F25F6E94E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -35,10 +27,6 @@ Global
 		{FF865756-5E9B-4DAE-AC4C-F27161381E84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF865756-5E9B-4DAE-AC4C-F27161381E84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF865756-5E9B-4DAE-AC4C-F27161381E84}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9D24ACDA-6A06-4473-8B5E-56DA0AEE70BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9D24ACDA-6A06-4473-8B5E-56DA0AEE70BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9D24ACDA-6A06-4473-8B5E-56DA0AEE70BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9D24ACDA-6A06-4473-8B5E-56DA0AEE70BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
