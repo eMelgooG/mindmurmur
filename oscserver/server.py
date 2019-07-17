@@ -1,5 +1,6 @@
 import argparse
 import logging
+import msvcrt
 import numpy as np
 import socketserver
 import sys
@@ -15,8 +16,9 @@ from rabbit_controller import RabbitController
 
 QUEUE_SIZE = 300  # band powers are calculated at 10hz, storing a 30 seconds worth of data in dequeue
 
-EMIT_STAGE_PERIOD_SECONDS = 60  # evaluating stages every 3 minutes
+EMIT_STAGE_PERIOD_SECONDS = 60  # evaluating stages every minute
 EMIT_EEGDATA_PERIOD_SECONDS = 1  # evaluating eegdata every second
+LISTEN_FOR_KEY_SECONDS = 0.05 # listening to keys 20 times per second
 ARIMA_PARAMS = (4, 0, 1)
 LOWER_THRESHOLD = -0.04
 UPPER_THRESHOLD = 0.01
@@ -100,6 +102,7 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
         self.rabbit.publish_state(self.state)
         Thread(target=self.predict_next_level, daemon=True).start()
         Thread(target=self.update_rawvalues, daemon=True).start()
+        Thread(target=self.listen_for_keys, daemon=True).start()
 
     def predict_next_level(self):
         while not self._stop.is_set():
@@ -132,6 +135,18 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
             # send to the bus
             print("[ ] EMITTING EEGDATA: %s" %(self.raw_values))
             self.rabbit.publish_eegdata(self.raw_values)
+
+    def listen_for_keys(self):
+        while not self._stop.is_set():
+            self._stop.wait(LISTEN_FOR_KEY_SECONDS)
+            if msvcrt.kbhit():
+                ch = msvcrt.getch()
+                if ch:
+                    key = ch.decode()
+                    if key in ['1', '2', '3', '4', '5']:
+                        self.state = int(key)
+                        print("[ ] PRESSED KEY '%s', EMITTING STATE: %s" %(key, self.state))
+                        self.rabbit.publish_state(self.state)
 
 
 if __name__ == '__main__':
