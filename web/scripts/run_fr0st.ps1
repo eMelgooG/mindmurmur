@@ -1,1 +1,1 @@
-C:/Python/Anaconda2/python.exe "c:/Users/aurel/OneDrive/Documents/DEV ROOT/PYTHON/mindmurmer/fr0st-master/fr0st.py"
+C:/Python27/python.exe "c:/Users/Mind Murmur/Documents/mindmurmer/fr0st-master/fr0st.py"

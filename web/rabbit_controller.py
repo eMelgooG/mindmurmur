@@ -12,7 +12,7 @@ class RabbitController(object):
         self.QUEUE_NAME_COLOR = 'MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain_colorCommand'
         self.QUEUE_NAME_HEART = 'MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain_heartRateCommand'
         self.QUEUE_NAME_STATE = 'MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain_meditationStateCommand'
-        self.QUEUE_NAME_EEGDATA = 'MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain_eegdataCommand'
+        self.QUEUE_NAME_EEGDATA = 'MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain_eegDataCommand'
         self.EXCHANGE_STATE = 'MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain'
         self.EXCHANGE_COLOR = 'MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain'
         self.EXCHANGE_HEART = 'MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain'
@@ -27,15 +27,21 @@ class RabbitController(object):
 
         return
 
-    def _base_subscribe(self, consume_target_str, queue_name, callback):
+    def _base_subscribe(self, consume_target_str, queue_name, callback, existing_channel=None):
         try:
-            new_channel = self.open_channel()
-            new_channel.queue_declare(queue=queue_name)
-            new_channel.basic_consume(callback, queue=queue_name, no_ack=True)
-            new_channel.start_consuming()
+            if existing_channel:
+                channel = existing_channel
+            else:
+                channel = self.open_channel()
 
-            logging.info("waiting for {consume_target_str} state messages..".format(
-                consume_target_str=consume_target_str))
+            channel.queue_declare(queue=queue_name, durable=True)
+            channel.basic_consume(queue_name, callback, auto_ack=True)
+
+            # if existing channel was supplied, let caller start consume on his own
+            if not existing_channel:
+                channel.start_consuming()
+                logging.info("waiting for {consume_target_str} state messages..".format(
+                    consume_target_str=consume_target_str))
         except Exception as e:
             print(repr(e))
 
@@ -70,38 +76,38 @@ class RabbitController(object):
             print('error during rabbitMQ channel creation: ' + str(ex))
             return None
 
-    def subscribe_meditation(self, callback):
-        self._base_subscribe("meditation state", self.EXCHANGE_STATE, callback)
+    def subscribe_meditation(self, callback, existing_channel=None):
+        self._base_subscribe("meditation state", self.QUEUE_NAME_STATE, callback, existing_channel=existing_channel)
 
-    def subscribe_heart_rate(self, callback):
-        self._base_subscribe("heart rate", self.EXCHANGE_HEART, callback)
+    def subscribe_heart_rate(self, callback, existing_channel=None):
+        self._base_subscribe("heart rate", self.QUEUE_NAME_HEART, callback, existing_channel=existing_channel)
 
-    def subscribe_eegdata(self, callback):
-        self._base_subscribe("EEG data", self.EXCHANGE_EEGDATA, callback)
+    def subscribe_eegdata(self, callback, existing_channel=None):
+        self._base_subscribe("EEG data", self.QUEUE_NAME_EEGDATA, callback, existing_channel=existing_channel)
 
     def publish_color(self, color):
         color_command = ColorControlCommand(color.red, color.green, color.blue)
-        self._base_publish(self.EXCHANGE_COLOR, self.color_props, color_command)
+        self._base_publish(self.QUEUE_NAME_COLOR, self.color_props, color_command)
 
         logging.info("sent color message (Red: {red}, Blue: {blue}, Green: {green})".format(
             red=color.red, green=color.green, blue=color.blue))
 
     def publish_heart(self, heartbeat):
         heart_command = HeartRateCommand(heartbeat)
-        self._base_publish(self.EXCHANGE_HEART, self.heart_props, heart_command)
+        self._base_publish(self.QUEUE_NAME_HEART, self.heart_props, heart_command)
 
         logging.info("sent heart rate message {heartbeat}".format(heartbeat=heartbeat))
 
     def publish_state(self, meditation_state):
         state_command = MeditationStateCommand(meditation_state)
-        self._base_publish(self.EXCHANGE_STATE, self.state_props, state_command)
+        self._base_publish(self.QUEUE_NAME_STATE, self.state_props, state_command)
 
         logging.info("sent meditation state message {meditation_state}".format(
             meditation_state=meditation_state))
 
     def publish_eegdata(self, eegdata_values):
         eegdata_command = EEGDataCommand(eegdata_values)
-        self._base_publish(self.EXCHANGE_EEGDATA, self.eegdata_props, eegdata_command)
+        self._base_publish(self.QUEUE_NAME_EEGDATA, self.eegdata_props, eegdata_command)
 
         logging.info("sent eegdata message {eegdata_values}".format(eegdata_values=eegdata_values))
 

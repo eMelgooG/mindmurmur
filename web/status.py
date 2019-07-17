@@ -7,7 +7,10 @@ import ctypes
 if os.name == 'nt':
     import ctypes.wintypes
 
-if sys.argv[1] != 'test':
+EnumProcesses = None
+GetProcessImageFileName = None
+
+if len(sys.argv) <= 1 or sys.argv[1] != 'test':
     Psapi = ctypes.WinDLL('Psapi.dll')
     EnumProcesses = Psapi.EnumProcesses
     EnumProcesses.restype = ctypes.wintypes.BOOL
@@ -27,7 +30,7 @@ bad_color = 'red'
 
 
 def running_if_process_found(id, name, needle):
-    if sys.argv[1] == 'test':
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
         ProcessId = 123456
         ProcessName = needle + '.exe'
         return _running(id, name, 'PID ' + str(ProcessId) + ' found containing string "' + needle + '": "' + ProcessName + '"')
@@ -84,7 +87,7 @@ class Status():
             all_good_status = {'id': "all", 'name': "ALL", 'color': running_color, 'text': "running", 'details': "All engine running"}
             statuses.insert(0, all_good_status)
         else:
-            bad_names = [s.name for s in bads]
+            bad_names = [s['name'] for s in bads]
             all_bad_status = {'id': "all", 'name': "ALL", 'color': bad_color, 'text': "not fully up", 'details': ', '.join(bad_names) + ' not running'}
             statuses.insert(0, all_bad_status)
 
