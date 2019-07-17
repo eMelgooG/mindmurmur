@@ -1,2 +1,4 @@
-cd "c:/Users/Mind Murmur/Documents/mindmurmur/fr0st-master"
-C:/Python27/python.exe "fr0st.py"
+cd ($PSScriptRoot + "\..\..\fr0st-master")
+py -2 "fr0st.py"
+
+pause

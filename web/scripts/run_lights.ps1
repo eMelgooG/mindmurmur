@@ -1,2 +1,4 @@
-cd "C:\Users\Mind Murmur\Documents\mindmurmur\lights\MindMurmur.Lights\bin\Debug"
+cd ($PSScriptRoot + "\..\..\lights\MindMurmur.Lights\bin\Debug")
 .\MindMurmur.Lights.exe
+
+pause
