@@ -48,16 +48,16 @@ def running_if_process_found(id, name, needle):
         else:
             sys.exit("Call to EnumProcesses failed")
 
-    for index in range(BytesReturned.value / ctypes.sizeof(ctypes.wintypes.DWORD)):
+    for index in range(BytesReturned.value // ctypes.sizeof(ctypes.wintypes.DWORD)):
         ProcessId = ProcessIds[index]
         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, False, ProcessId)
         if hProcess:
             ImageFileName = (ctypes.c_char*MAX_PATH)()
             if GetProcessImageFileName(hProcess, ImageFileName, MAX_PATH) > 0:
                 filename = os.path.basename(ImageFileName.value)
-                if needle in filename:
+                if needle.encode() in filename:
                     CloseHandle(hProcess)
-                    return _running(id, name, 'PID ' + str(ProcessId) + ' found containing string "' + needle + '": "' + ImageFileName.value + '"')
+                    return _running(id, name, 'PID ' + str(ProcessId) + ' found containing string "' + needle + '": "' + str(ImageFileName.value) + '"')
             CloseHandle(hProcess)
 
     return _not_running(id, name, 'No processes found containing string "' + needle + '"')
@@ -81,7 +81,7 @@ class Status():
             self._status_sound(),
         ]
 
-        bads = filter(lambda s: s['color'] != running_color, statuses)
+        bads = [s for s in statuses if s['color'] != running_color]
 
         if len(bads) == 0:
             all_good_status = {'id': "all", 'name': "ALL", 'color': running_color, 'text': "running", 'details': "All engine running"}

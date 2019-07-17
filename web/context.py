@@ -1,5 +1,5 @@
 def available_states():
-    return [{'id': str(level+1), 'name': str(level+1)} for level in xrange(5)]
+    return [{'id': str(level+1), 'name': str(level+1)} for level in range(5)]
 
 
 class Context():
