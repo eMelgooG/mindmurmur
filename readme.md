@@ -1,4 +1,4 @@
-# mindmurmer
+# mindmurmur
 ## about
 original fr0st application: Fractlat Fr0st fr0stlib
 https://code.launchpad.net/fr0st
@@ -19,8 +19,8 @@ the following libraries are required:
 
 ## Windows Environment variables
 
-- `mindmurmer`
-- `mindmurmer\fr0st-master\fr0stlib\pyflam3\win32_dlls`
+- `mindmurmur`
+- `mindmurmur\fr0st-master\fr0stlib\pyflam3\win32_dlls`
 
 ### GPU processing with Nvidia CUDA
 Read documentation here https://developer.nvidia.com/how-to-cuda-python
@@ -51,7 +51,7 @@ The samples.flame are the default set of flames included in Fractal Fr0st.
 In the scripts folder are the default scripts that came with Fractal Fr0st.
 Some create random flames, others render pictures in batches.
 
-the mindmurmer folder has the script used for running the EEG algorithm.
+the mindmurmur folder has the script used for running the EEG algorithm.
 
 ## RUN the application
 

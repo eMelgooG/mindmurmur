@@ -407,7 +407,7 @@ class MMEngine:
 
 # RUN
 print('[$] - BEGIN SCRIPT -')
-audio_folder = get_scriptpath() + "/mindmurmer/sounds_controllers/sound_controller_demo_files/soundscape_controller_demo_files"
+audio_folder = get_scriptpath() + "/mindmurmur/sounds_controllers/sound_controller_demo_files/soundscape_controller_demo_files"
 # 1 - Dummy DATA
 # eeg = EEGDummy()
 eeg = EEGFromRabbitMQ('localhost', 5672, 'guest', 'guest', '/')
@@ -415,9 +415,9 @@ eeg = EEGFromRabbitMQ('localhost', 5672, 'guest', 'guest', '/')
 # eeg = EEGFromAudio(audio)
 # 2 - DATA from json file
 # eeg = EEGFromJSONFile(get_scriptpath() + '/mindmurmur/data/Muse-B1C1_2018-06-11--07-48-41_1528717729867.json') # extra small
-# eeg = EEGFromJSONFile(get_scriptpath() + '/mindmurmer/data/Muse-B1C1_2018-06-10--18-35-09_1528670624296.json') # medium
-# eeg = EEGFromJSONFile(get_scriptpath() + '/mindmurmer/data/Muse-B1C1_2018-07-16--07-24-35_1531745297756.json') # large (16 july)
-#eeg = EEGFromJSONFile(get_scriptpath() + '/mindmurmer/data/Muse-B1C1_2018-07-17--07-00-11_1531868655676.json') # large (17 july)
+# eeg = EEGFromJSONFile(get_scriptpath() + '/mindmurmur/data/Muse-B1C1_2018-06-10--18-35-09_1528670624296.json') # medium
+# eeg = EEGFromJSONFile(get_scriptpath() + '/mindmurmur/data/Muse-B1C1_2018-07-16--07-24-35_1531745297756.json') # large (16 july)
+#eeg = EEGFromJSONFile(get_scriptpath() + '/mindmurmur/data/Muse-B1C1_2018-07-17--07-00-11_1531868655676.json') # large (17 july)
 
 #_self is some hidden hack from fr0st that refers to the gui MainWindow
 engine = MMEngine(eeg, _self, audio_folder)

@@ -1,1 +1,2 @@
-C:/Python27/python.exe "c:/Users/Mind Murmur/Documents/mindmurmer/fr0st-master/fr0st.py"
+cd "c:/Users/Mind Murmur/Documents/mindmurmur/fr0st-master"
+C:/Python27/python.exe "fr0st.py"

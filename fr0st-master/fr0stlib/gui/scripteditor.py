@@ -63,7 +63,7 @@ class EditorFrame(wx.Frame):
         self.fav = FavoritesHandler(self)
 
         # Load the default script
-        self.OpenScript(os.path.join(wx.GetApp().UserScriptsDir, './mindmurmer/default_eeg.py'))
+        self.OpenScript(os.path.join(wx.GetApp().UserScriptsDir, './mindmurmur/default_eeg.py'))
 
 
     @Bind(wx.EVT_CLOSE)

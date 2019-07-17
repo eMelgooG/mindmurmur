@@ -14,12 +14,12 @@ For the audio folder, its structure should be a set of folders where each folder
 for the lightest mode. Each folder should contain one track for the heartbeat of that stage with the text `heartbeat` in it and at least another track which is the sound scape track
 
 ```
-cd fr0st-master/fr0st/scripts/mindmurmer
-python sounds_controllers/sound_controller.py --audio_folder fr0st-master/fr0st/scripts/mindmurmer/sounds_controller_files/16000hz-24bit/mp3/audio --up_transition_sound_filename fr0st-master/fr0st/scripts/mindmurmer/sounds_controller_files/16000hz-24bit/mp3/transition_up.mp3 --down_transition_sound_filename fr0st-master/fr0st/scripts/mindmurmer/sounds_controller_files/16000hz-24bit/mp3/transition_down.mp3
+cd fr0st-master/fr0st/scripts/mindmurmur
+python sounds_controllers/sound_controller.py --audio_folder fr0st-master/fr0st/scripts/mindmurmur/sounds_controller_files/16000hz-24bit/mp3/audio --up_transition_sound_filename fr0st-master/fr0st/scripts/mindmurmur/sounds_controller_files/16000hz-24bit/mp3/transition_up.mp3 --down_transition_sound_filename fr0st-master/fr0st/scripts/mindmurmur/sounds_controller_files/16000hz-24bit/mp3/transition_down.mp3
 ```
 
 ## Spinning up the demo
 ```
-cd fr0st-master/fr0st/scripts/mindmurmer
+cd fr0st-master/fr0st/scripts/mindmurmur
 python sound_controller_demo.py
 ```

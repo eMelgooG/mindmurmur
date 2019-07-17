@@ -1,2 +1,2 @@
-cd "C:\Users\Mind Murmur\Documents\mindmurmer\lights\MindMurmur.Lights\bin\Debug"
+cd "C:\Users\Mind Murmur\Documents\mindmurmur\lights\MindMurmur.Lights\bin\Debug"
 .\MindMurmur.Lights.exe
