@@ -1,0 +1,62 @@
+{
+  "1": {
+    "Index": 38, //when elar driver address is set to 32 (1:off, 2:off, 3:off, 4:off, 5:off, 6:on, 7:off ) -- so it is driver switch is + 6
+    "Offset": 4,
+    "Dimmer": -1,
+    "HonorAlpha": false,
+    "LEDList": [
+      {
+        "Index": 38,
+        "AlphaChannel": 38,
+        "RedChannel": 39,
+        "GreenChannel": 40,
+        "BlueChannel": 41
+      }
+    ]
+  },
+  "2": {
+    "Index": 42, //when elar driver address is set to 38 (1:off, 2:off, 3:off, 4:off, 5:off, 6:on, 7:off ) -- so it is driver switch is + 6
+    "Offset": 4,
+    "Dimmer": -1,
+    "HonorAlpha": false,
+    "LEDList": [
+      {
+        "Index": 42,
+        "AlphaChannel": 42,
+        "RedChannel": 43,
+        "GreenChannel": 44,
+        "BlueChannel": 45
+      }
+    ]
+  },
+  "3": {
+    "Index": 46, //when elar driver address is set to 40 (1:off, 2:off, 3:off, 4:off, 5:off, 6:on, 7:off ) -- so it is driver switch is + 6
+    "Offset": 4,
+    "Dimmer": -1,
+    "HonorAlpha": false,
+    "LEDList": [
+      {
+        "Index": 46,
+        "AlphaChannel": 46,
+        "RedChannel": 47,
+        "GreenChannel": 48,
+        "BlueChannel": 49
+      }
+    ]
+  },
+  "4": {
+    "Index": 50, //when elar driver address is set to 44 (1:off, 2:off, 3:off, 4:off, 5:off, 6:on, 7:off ) -- so it is driver switch is + 6
+    "Offset": 4,
+    "Dimmer": -1,
+    "HonorAlpha": false,
+    "LEDList": [
+      {
+        "Index": 50,
+        "AlphaChannel": 50,
+        "RedChannel": 51,
+        "GreenChannel": 52,
+        "BlueChannel": 53
+      }
+    ]
+  }
+}
