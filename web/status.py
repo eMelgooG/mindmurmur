@@ -9,6 +9,8 @@ if os.name == 'nt':
 
 EnumProcesses = None
 GetProcessImageFileName = None
+OpenProcess = None
+CloseHandle = None
 
 if len(sys.argv) <= 1 or sys.argv[1] != 'test':
     Psapi = ctypes.WinDLL('Psapi.dll')
