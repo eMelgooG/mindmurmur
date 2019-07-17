@@ -10,7 +10,6 @@ from fr0stlib.pyflam3 import Genome, byref, flam3_interpolate
 from utils import get_scriptpath, easing_cubic, easing_sine
 from eegsources import *
 from rabbit_controller import RabbitController
-from sound_controller import MindMurmurSoundScapeController
 from input_controller import InputController
 
 
@@ -47,7 +46,6 @@ class MMEngine:
         # init rabbitMQ connection
         self.rabbit = RabbitController('localhost', 5672, 'guest', 'guest', '/')
 
-        # self.audio_controller = MindMurmurSoundScapeController(audio_folder)
         self.input_controller = InputController(self)
 
         # attach keyboard events.
