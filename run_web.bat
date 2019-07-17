@@ -1,3 +1,4 @@
 cd web
-python webapp.py
-pause
+start py -3 webapp.py
+timeout 1
+start http://localhost:8080
