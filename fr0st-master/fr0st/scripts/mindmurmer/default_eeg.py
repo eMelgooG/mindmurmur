@@ -9,7 +9,7 @@ from fr0stlib.pyflam3 import Genome, byref, flam3_interpolate
 
 from utils import get_scriptpath, easing_cubic, easing_sine
 from eegsources import *
-from rabbit_controller import RabbitController
+from common.rabbit_controller import RabbitController
 from input_controller import InputController
 
 

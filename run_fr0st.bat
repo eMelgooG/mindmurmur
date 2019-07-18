@@ -1,2 +1,2 @@
-powershell web\scripts\run_fr0st.ps1
+cmd /c ".\env2\scripts\activate && cd fr0st-master && python fr0st.py"
 pause

@@ -1,2 +1,2 @@
-powershell web\scripts\run_osc.ps1
+cmd /c ".\env3\scripts\activate && python oscserver\server.py"
 pause

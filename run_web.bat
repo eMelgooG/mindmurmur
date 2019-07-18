@@ -1,4 +1,3 @@
-cd web
-start py -3 webapp.py
+cmd /c ".\env3\scripts\activate && cd web && start python webapp.py"
 timeout 1
 start http://localhost:8080

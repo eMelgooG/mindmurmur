@@ -1,2 +1,3 @@
-powershell web\scripts\run_lights.ps1
+cd lights\MindMurmur.Lights\bin\Debug
+.\MindMurmur.Lights.exe
 pause

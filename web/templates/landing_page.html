@@ -19,23 +19,6 @@
   {% endif %}
   <h3>Mind Murmur Controller</h3>
   <hr>
-  <div>
-    <p>Status (Tap To Execute Run Script):</p>
-    {% for status in statuses %}
-    <div style="display:inline;border:1px;background-color:{{status.color}};padding:5px" onclick="showhideStatus('{{status.id}}')">{{status.name}}</div>
-    {% endfor %}
-    {% for status in statuses %}
-    <div id="status_{{status.id}}" style="display:none">
-      <hr>
-      <p>{{status.name}} is {{status.text}}. Details: {{status.details}}</p>
-      <p>Controls for {{status.name}}:</p>
-      <form action="/api/run/{{status.id}}" method="post" style="display:inline">
-        <button class="btn btn-danger">Run {{status.id}} script<br>(WARNING: careful to not run it twice)</button>
-      </form>
-    </div>
-    {% endfor %}
-  </div>
-  <hr>
 </div>
 <div class="col-md-6">
   <p>Meditation Level History (scroll for more)</p>

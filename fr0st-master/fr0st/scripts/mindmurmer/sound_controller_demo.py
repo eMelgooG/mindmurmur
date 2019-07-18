@@ -1,7 +1,7 @@
 import logging
 import time
 
-from rabbit_controller import RabbitController
+from common.rabbit_controller import RabbitController
 
 log_format = ('%(asctime)s %(filename)s %(lineno)s %(process)d %(levelname)s: %(message)s')
 log_level = logging.INFO

@@ -1,7 +1,7 @@
 import datetime
 
 from flask import Flask, redirect, request, render_template, send_from_directory, jsonify
-from rabbit_controller import RabbitController
+from common.rabbit_controller import RabbitController
 from api import API
 from bus import Bus
 from context import Context
@@ -48,11 +48,6 @@ def api_history():
     since_millis = float(request.args.get('since'))
     since = datetime.datetime.utcfromtimestamp(since_millis/1000.0)
     return jsonify(api.history(since))
-
-
-@app.route('/api/run/<path:path>', methods=['POST'])
-def api_run(path):
-    return redirect_with_alert(api.run(path))
 
 
 @app.route('/api/state/<path:path>', methods=['POST'])

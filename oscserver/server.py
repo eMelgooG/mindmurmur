@@ -12,7 +12,7 @@ from collections import deque
 from statsmodels.tsa import arima_model
 from threading import Thread, Lock, Event
 
-from rabbit_controller import RabbitController
+from common.rabbit_controller import RabbitController
 
 QUEUE_SIZE = 300  # band powers are calculated at 10hz, storing a 30 seconds worth of data in dequeue
 

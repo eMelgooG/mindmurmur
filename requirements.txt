@@ -1,0 +1,6 @@
+Flask
+numpy
+pika
+statsmodels
+swmixer
+pyaudio

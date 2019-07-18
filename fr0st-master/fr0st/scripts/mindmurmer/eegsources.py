@@ -3,7 +3,7 @@ import numpy as np
 import json
 import threading
 
-from rabbit_controller import RabbitController
+from common.rabbit_controller import RabbitController
 
 class EEGData():
     # inline values

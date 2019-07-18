@@ -14,7 +14,8 @@ dist
 .idea
 
 # virtualenv
-mindmurmurvirtualenv
+env2
+env3
 
 # local conf files
 fr0st-master/fr0st/config.cfg

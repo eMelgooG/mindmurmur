@@ -13,13 +13,6 @@ class API():
             'heart_rate': self.bus.get_heart_rate_history(since),
         }
 
-    def run(self, name):
-        exitcode = self.runner.run(name)
-        if exitcode == 0:
-            return True, 'Script ' + name + ' run! Exit code: ' + str(exitcode)
-        else:
-            return False, 'Script ' + name + ' failed! Exit code: ' + str(exitcode)
-
     def send_state(self, name):
         try:
             self.bus.send_state(name)

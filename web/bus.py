@@ -3,7 +3,7 @@ import logging
 import sys
 import threading
 
-from rabbit_controller import MeditationStateCommand, HeartRateCommand
+from common.rabbit_controller import MeditationStateCommand, HeartRateCommand
 
 MAX_MESSAGES = 500  # Number of messages to keep for web UI
 

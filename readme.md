@@ -4,7 +4,7 @@ original fr0st application: Fractlat Fr0st fr0stlib
 https://code.launchpad.net/fr0st
 ## requirements:
 
-The app is using **python v2.7**
+The app is using **python v2.7** and **python 3**
 the following libraries are required:
 - **numpy**
 - **pyaudio**
@@ -16,6 +16,17 @@ the following libraries are required:
 - **pika**
 - **statsmodels**
 - **patsy**
+
+## Python environment setup
+
+- Install a 32-bit Python 2 (because libflam3.dll is 32-bit)
+- Install Python 3
+- Download get-pip.py from https://pip.pypa.io/en/stable/installing/
+- Install pip for python 2 and python 3:
+  - py -2 get-pip.py
+  - py -3 get-pip.py
+- `run_me_first.bat` will set up virtual environments.
+
 
 ## Windows Environment variables
 

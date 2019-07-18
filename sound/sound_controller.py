@@ -6,7 +6,7 @@ import argparse
 
 from threading import Thread
 from collections import defaultdict
-from rabbit_controller import RabbitController, MeditationStateCommand, HeartRateCommand
+from common.rabbit_controller import RabbitController, MeditationStateCommand, HeartRateCommand
 
 
 class MindMurmurSoundScapeController(object):
