@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def landing_page():
-    ctx = context.fetch()
+    ctx = context.fetch(request)
 
     if 'success' in request.args:
         ctx['alert_success'] = request.args['success']
