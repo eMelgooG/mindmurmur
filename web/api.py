@@ -3,9 +3,8 @@ import traceback
 
 class API():
 
-    def __init__(self, bus, runner):
+    def __init__(self, bus):
         self.bus = bus
-        self.runner = runner
 
     def history(self, since):
         return {

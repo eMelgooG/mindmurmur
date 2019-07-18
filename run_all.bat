@@ -1,5 +1,5 @@
-cmd /k run_fr0st.bat
-cmd /k run_lights.bat
-cmd /k run_osc.bat
-cmd /k run_sound.bat
-cmd /k run_web.bat
+start run_fr0st.bat
+start run_lights.bat
+start run_osc.bat
+start run_sound.bat
+start run_web.bat

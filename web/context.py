@@ -4,13 +4,11 @@ def available_states():
 
 class Context():
 
-    def __init__(self, bus, status):
+    def __init__(self, bus):
         self.bus = bus
-        self.status = status
 
     def fetch(self):
         return {
-            'statuses': self.status.get_statuses(),
             'state': self.bus.get_state(),
             'states': available_states(),
             'state_history': self.bus.get_state_history(),

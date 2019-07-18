@@ -5,16 +5,12 @@ from common.rabbit_controller import RabbitController
 from api import API
 from bus import Bus
 from context import Context
-from runner import Runner
-from status import Status
 
 
 rabbit = RabbitController('localhost', 5672, 'guest', 'guest', '/')
 bus = Bus(rabbit)
-runner = Runner()
-api = API(bus, runner)
-status = Status()
-context = Context(bus, status)
+api = API(bus)
+context = Context(bus)
 
 app = Flask(__name__)
 
