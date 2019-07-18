@@ -9,10 +9,6 @@ class RabbitController(object):
 
     def __init__(self, host, port, user, password, virtualhost):
 
-        self.QUEUE_NAME_COLOR = 'MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain_colorCommand'
-        self.QUEUE_NAME_HEART = 'MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain_heartRateCommand'
-        self.QUEUE_NAME_STATE = 'MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain_meditationStateCommand'
-        self.QUEUE_NAME_EEGDATA = 'MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain_eegDataCommand'
         self.EXCHANGE_STATE = 'MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain'
         self.EXCHANGE_COLOR = 'MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain'
         self.EXCHANGE_HEART = 'MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain'
@@ -27,20 +23,25 @@ class RabbitController(object):
 
         return
 
-    def _base_subscribe(self, consume_target_str, queue_name, callback, existing_channel=None):
+    def _base_subscribe(self, consume_target_str, exchange, callback, existing_channel=None):
         try:
             if existing_channel:
                 channel = existing_channel
             else:
                 channel = self.open_channel()
 
-            channel.queue_declare(queue=queue_name, durable=True)
+            channel.exchange_declare(exchange=exchange, exchange_type='fanout', durable=True)
+
+            result = channel.queue_declare(queue='', exclusive=True)
+            queue_name = result.method.queue
+            channel.queue_bind(exchange=exchange, queue=queue_name)
+
             channel.basic_consume(queue_name, callback, auto_ack=True)
 
             # if existing channel was supplied, let caller start consume on his own
             if not existing_channel:
                 channel.start_consuming()
-                logging.info("waiting for {consume_target_str} state messages..".format(
+                logging.info("waiting for {consume_target_str} messages..".format(
                     consume_target_str=consume_target_str))
         except Exception as e:
             print(repr(e))
@@ -48,13 +49,13 @@ class RabbitController(object):
             if self.open_connection:
                 self.open_connection.close()
 
-    def _base_publish(self, queue_name, properties, command):
+    def _base_publish(self, exchange, properties, command):
         try:
             self.open_channel()
-            self.active_channel.queue_declare(queue=queue_name, passive=True)
-            self.active_channel.basic_publish(exchange='',
+            self.active_channel.exchange_declare(exchange=exchange, exchange_type='fanout', durable=True)
+            self.active_channel.basic_publish(exchange=exchange,
                                               properties=properties,
-                                              routing_key=queue_name,
+                                              routing_key='',
                                               body=command.to_json())
         except Exception as e:
             print(repr(e))
@@ -77,37 +78,37 @@ class RabbitController(object):
             return None
 
     def subscribe_meditation(self, callback, existing_channel=None):
-        self._base_subscribe("meditation state", self.QUEUE_NAME_STATE, callback, existing_channel=existing_channel)
+        self._base_subscribe("meditation state", self.EXCHANGE_STATE, callback, existing_channel=existing_channel)
 
     def subscribe_heart_rate(self, callback, existing_channel=None):
-        self._base_subscribe("heart rate", self.QUEUE_NAME_HEART, callback, existing_channel=existing_channel)
+        self._base_subscribe("heart rate", self.EXCHANGE_HEART, callback, existing_channel=existing_channel)
 
     def subscribe_eegdata(self, callback, existing_channel=None):
-        self._base_subscribe("EEG data", self.QUEUE_NAME_EEGDATA, callback, existing_channel=existing_channel)
+        self._base_subscribe("EEG data", self.EXCHANGE_EEGDATA, callback, existing_channel=existing_channel)
 
     def publish_color(self, color):
         color_command = ColorControlCommand(color.red, color.green, color.blue)
-        self._base_publish(self.QUEUE_NAME_COLOR, self.color_props, color_command)
+        self._base_publish(self.EXCHANGE_COLOR, self.color_props, color_command)
 
         logging.info("sent color message (Red: {red}, Blue: {blue}, Green: {green})".format(
             red=color.red, green=color.green, blue=color.blue))
 
     def publish_heart(self, heartbeat):
         heart_command = HeartRateCommand(heartbeat)
-        self._base_publish(self.QUEUE_NAME_HEART, self.heart_props, heart_command)
+        self._base_publish(self.EXCHANGE_HEART, self.heart_props, heart_command)
 
         logging.info("sent heart rate message {heartbeat}".format(heartbeat=heartbeat))
 
     def publish_state(self, meditation_state):
         state_command = MeditationStateCommand(meditation_state)
-        self._base_publish(self.QUEUE_NAME_STATE, self.state_props, state_command)
+        self._base_publish(self.EXCHANGE_STATE, self.state_props, state_command)
 
         logging.info("sent meditation state message {meditation_state}".format(
             meditation_state=meditation_state))
 
     def publish_eegdata(self, eegdata_values):
         eegdata_command = EEGDataCommand(eegdata_values)
-        self._base_publish(self.QUEUE_NAME_EEGDATA, self.eegdata_props, eegdata_command)
+        self._base_publish(self.EXCHANGE_EEGDATA, self.eegdata_props, eegdata_command)
 
         logging.info("sent eegdata message {eegdata_values}".format(eegdata_values=eegdata_values))
 
@@ -181,14 +182,14 @@ class MeditationStateCommand(BaseCommand):
 
     def __init__(self, meditation_state):
         super(MeditationStateCommand, self).__init__()
-        self.State = meditation_state
+        self.State = int(meditation_state)
 
     @staticmethod
     def from_string(command_string):
         return MeditationStateCommand(json.loads(command_string)["State"])
 
     def get_state(self):
-        return self.State
+        return int(self.State)
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__,sort_keys=True, indent=4)

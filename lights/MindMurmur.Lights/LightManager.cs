@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using MindMurmur.Domain;
 using MindMurmur.Domain.Light;
 using MindMurmur.Lights.Control;
+using EasyNetQ.Topology;
 
 namespace MindMurmur.Lights
 {
@@ -388,24 +389,30 @@ namespace MindMurmur.Lights
         /// </summary>
         public void HitchToTheBus()
         {
-            var bus = RabbitHutch.CreateBus("host=localhost");
+            var bus = RabbitHutch.CreateBus("host=localhost").Advanced;
 
-            var heartRateSubscribeResult = bus.Subscribe<HeartRateCommand>("heartRateCommand", (cmd) =>
+            var heartRateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable:true);
+            var heartRateQueue = bus.QueueDeclare("heartRateQueue", exclusive:true);
+            bus.Bind(heartRateExchange, heartRateQueue, "");
+            bus.Consume<HeartRateCommand>(heartRateQueue, (msg, info) =>
             {
-                if (CurrentHeartRate != cmd.HeartRate)
+                if (CurrentHeartRate != msg.Body.HeartRate)
                 {
-                    Console.WriteLine($"Heart.Rx {cmd.CommandId} [{cmd.HeartRate}]");
-                    CurrentHeartRate = cmd.HeartRate / 2;//cutting the heart rate in half
-                    bpmSubject.OnNext(cmd.HeartRate);
+                    Console.WriteLine($"Heart.Rx {msg.Body.CommandId} [{msg.Body.HeartRate}]");
+                    CurrentHeartRate = msg.Body.HeartRate / 2; // cut the heart rate in half
+                    bpmSubject.OnNext(msg.Body.HeartRate);
                 }
             });
 
-            var dimmerControlSubscribeResult = bus.Subscribe<DimmerControlCommand>("dimmerControlCommand", (cmd) =>
+            var dimmerControlExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.DimmerControlCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+            var dimmerControlQueue = bus.QueueDeclare("dimmerControlQueue", exclusive: true);
+            bus.Bind(dimmerControlExchange, dimmerControlQueue, "");
+            bus.Consume<DimmerControlCommand>(dimmerControlQueue, (msg, info) =>
             {
-                if (CurrentHeartRate != cmd.DimmerValue)
+                if (CurrentHeartRate != msg.Body.DimmerValue)
                 {
-                    Console.WriteLine($"Dimmer.Rx {cmd.CommandId} [{cmd.DimmerValue}]");
-                    Config.DimmerValue = cmd.DimmerValue;
+                    Console.WriteLine($"Dimmer.Rx {msg.Body.CommandId} [{msg.Body.DimmerValue}]");
+                    Config.DimmerValue = msg.Body.DimmerValue;
                     foreach (LightStrip strip in Config.VerticesLightStrips)
                     {
                         strip.Dimmer = Config.DimmerValue;
@@ -414,23 +421,29 @@ namespace MindMurmur.Lights
                     {
                         Config.ChandelierLightStrips[k].Dimmer = Config.DimmerValue;
                     }
-                    dimmerSubject.OnNext(cmd.DimmerValue);
+                    dimmerSubject.OnNext(msg.Body.DimmerValue);
                 }
             });
 
-            var colorControlSubscribeResult = bus.Subscribe<ColorControlCommand>("colorCommand", (cmd) => {
-                Color cmdColor = Color.FromArgb(cmd.ColorRed, cmd.ColorGreen, cmd.ColorBlue);
+            var colorControlExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+            var colorControlQueue = bus.QueueDeclare("colorControlQueue", exclusive: true);
+            bus.Bind(colorControlExchange, colorControlQueue, "");
+            bus.Consume<ColorControlCommand>(colorControlQueue, (msg, info) => {
+                Color cmdColor = Color.FromArgb(msg.Body.ColorRed, msg.Body.ColorGreen, msg.Body.ColorBlue);
                 if (CurrentColor != cmdColor)
                 {
-                    Console.WriteLine($"Color.Rx {cmd.CommandId} [{cmd.ColorRed},{cmd.ColorGreen},{cmd.ColorBlue}]");
+                    Console.WriteLine($"Color.Rx {msg.Body.CommandId} [{msg.Body.ColorRed},{msg.Body.ColorGreen},{msg.Body.ColorBlue}]");
                     CurrentColor = cmdColor;
                     colorSubject.OnNext(cmdColor);
                 }
             });
 
-            var meditationStateSubscribeResult = bus.Subscribe<MeditationStateCommand>("meditationStateCommand", (cmd) => {
-                Console.WriteLine($"MeditationState.Rx {cmd.CommandId} [{cmd.State}]");
-                var thisState = (MeditationState)cmd.State;
+            var meditationStateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+            var meditationStateQueue = bus.QueueDeclare("meditationStateQueue", exclusive: true);
+            bus.Bind(meditationStateExchange, meditationStateQueue, "");
+            bus.Consume<MeditationStateCommand>(meditationStateQueue, (msg, info) => {
+                Console.WriteLine($"MeditationState.Rx {msg.Body.CommandId} [{msg.Body.State}]");
+                var thisState = (MeditationState)msg.Body.State;
                 lastStateChange = DateTime.UtcNow;
                 //Set previous values
                 PreviousMediationState = thisState;
@@ -450,8 +463,11 @@ namespace MindMurmur.Lights
                 BuildGradientTransition();//build the bitmap so we can get the color for transitioning
             });
 
-            var eegDataSubcribeResult = bus.Subscribe<EEGDataCommand>("eegDataCommand", (cmd) => {
-                Console.WriteLine($"EEGData.Rx {cmd.CommandId} [{string.Join(", ", cmd.Values)}]");
+            var eegDataExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+            var eegDataQueue = bus.QueueDeclare("eegDataQueue", exclusive: true);
+            bus.Bind(eegDataExchange, eegDataQueue, "");
+            bus.Consume<EEGDataCommand>(eegDataQueue, (msg, info) => {
+                Console.WriteLine($"EEGData.Rx {msg.Body.CommandId} [{string.Join(", ", msg.Body.Values)}]");
             });
 
             Console.WriteLine("[ ] Hitched to the bus");
