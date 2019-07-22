@@ -235,7 +235,6 @@ class MyLog(wx.TextCtrl):
         wx.TextCtrl.__init__(self,parent,-1,
                              style = wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL)
         self.SetFont(wx.Font(8, wx.MODERN, wx.NORMAL, wx.NORMAL))
-        sys.stdout = sys.stderr = self
 
 
     @InMainFast
