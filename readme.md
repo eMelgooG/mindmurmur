@@ -95,3 +95,10 @@ Open the following script from the app:
 ./fr0st/scripts/default_eeg.py
 ```
 Press the green light to see animation.
+
+## Optional steps
+
+* To take away another step from getting the laptop logged in and ready, you can disable the lock screen. Follow steps at https://www.windowscentral.com/how-disable-windows-10-lock-screen
+* You can also allow run_fr0st.bat to start without a user prompt by auto-accepting UAC prompts. Follow the steps at https://mywindowshub.com/how-to-stop-windows-10-from-asking-for-administrator-rights-to-run-unknown-apps/ and then drag the slider *all the way down*, like so:
+
+![UAC notification slider set to lowest setting](https://trello-attachments.s3.amazonaws.com/5ae22bee8b00b68c6056b5e5/5d360e73957eb41fb3a35732/cd8d4c5f496a4651e1d9b38adcaa4433/CleanShot_2019-07-23_at_18.53.38%402x.png)
