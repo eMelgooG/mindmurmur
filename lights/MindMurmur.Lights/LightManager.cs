@@ -377,9 +377,6 @@ namespace MindMurmur.Lights
 
             if (CurrentHeartRate < 20) CurrentHeartRate = 20;
 
-            //sets up bus connection and subscribes
-            HitchToTheBus();
-
             // set pulse timer @ 25 FPS to update LEDs
             heartRatePulseTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(40));
         }
