@@ -388,7 +388,7 @@ namespace MindMurmur.Lights
         {
             var bus = RabbitHutch.CreateBus("host=localhost").Advanced;
 
-            var heartRateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable:true);
+            var heartRateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable:true);
             var heartRateQueue = bus.QueueDeclare("heartRateQueue", exclusive:true);
             bus.Bind(heartRateExchange, heartRateQueue, "");
             bus.Consume<HeartRateCommand>(heartRateQueue, (msg, info) =>
