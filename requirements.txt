@@ -4,3 +4,5 @@ pika
 statsmodels
 swmixer
 pyaudio
+pygatt
+construct
