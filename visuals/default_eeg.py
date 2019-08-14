@@ -24,6 +24,7 @@ class RenderPanel(wx.Panel):
         wx.Panel.__init__(self, parent)
         self.renderer = renderer
         self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
         self.bmp = wx.EmptyBitmap(1, 1, 32)
 
     def render(self, flame):
@@ -41,6 +42,9 @@ class RenderPanel(wx.Panel):
         pw,ph = self.Size
         dc = wx.PaintDC(self)
         dc.DrawBitmap(self.bmp, (pw-fw)/2, (ph-fh)/2, True)
+
+    def OnEraseBackground(self, event):
+        pass # avoid flicker
 
 
 class RenderFrame(wx.Frame):
