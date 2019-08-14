@@ -128,7 +128,7 @@ class MMEngine():
         self.channels = 24
         self.sinelength = 300 # frames
         self.gui = gui
-        self.maxfps = 60 # target frames per second
+        self.maxfps = 20 # target frames per second
         self.states_flames = []
         self.meditation_state = 1
         self.user_connected = False
@@ -152,15 +152,12 @@ class MMEngine():
         self.disconnected_at = None
 
         # Init to meditation level 1
-        self.set_meditation_state(1, False)
+        self.set_meditation_state(set_next=True)
 
     def run(self):
         print("[>] RUNNING")
         self.keeprendering = True
         while self.keeprendering:
-            # fps timer
-            t0 = time.clock()
-
             try:
                 if(self.user_connected):
                     self.user_connected_frame()
@@ -179,10 +176,6 @@ class MMEngine():
                 print('[!] error during MMEngine RUN loop: ' + str(ex))
                 traceback.print_exc()
                 self.keeprendering = False
-            finally:
-                # sleep to keep a decent fps
-                delay = t0 + 1./self.maxfps - time.clock()
-                if delay > 0. : time.sleep(delay)
         self.stop()
 
 
@@ -195,15 +188,15 @@ class MMEngine():
 
         # no data
         if(eegdata is None or eegdata.is_empty() == True):
-            # do nothing during 5 minutes.
-            if(self.frame_index_sincestate > self.maxfps * 60):
+            # do nothing during 1 minute.
+            if(time.clock() > self.last_sincestate_reset + 60):
             # or transition to next state:
                 self.set_meditation_state(set_next=True)
 
         # data received
         else:
             # if inactive for more than 30 seconds
-            if(self.frame_index > self.maxfps * 30):
+            if(time.clock() > self.last_sincestate_reset + 30):
                 print("[ ] NEW SESSION")
                 self.retreive_params()
                 # back to state 1
@@ -226,8 +219,8 @@ class MMEngine():
 
             # [!] new meditation state reached
             if(self.meditation_state != eegdata.meditation_state \
-                # and if transitionned less than a minute ago
-                and self.frame_index_sincestate > self.maxfps * 60):
+                # and if transitionned more than a minute ago
+                and time.clock() > self.last_sincestate_reset + 60):
                 # [>] set new state
                 self.set_meditation_state(eegdata.meditation_state)
 
@@ -245,6 +238,7 @@ class MMEngine():
             # go to idling.
             self.frame_index = 0
             self.frame_index_sincestate = 0
+            self.last_sincestate_reset = time.clock()
             self.user_connected = False
 
 
@@ -265,6 +259,7 @@ class MMEngine():
         # save state
         self.meditation_state = newstate
         self.frame_index_sincestate = 0
+        self.last_sincestate_reset = time.clock()
 
         # find appropriate flame
         flame_per_state = int(len(self.states_flames) / 5)
