@@ -16,7 +16,14 @@ namespace MindMurmur.Lights
 
         const string VIRTUALFILENAME = "ShareK8062Data";
         const int DATASIZE = 2500;
-        const int CHANNEL_OFFSET = 3;
+        /// <summary>
+        /// extra offset for production environment
+        /// </summary>
+        const int CHANNEL_OFFSET = 7;
+        /// <summary>
+        /// built-in value from DMX specificationz
+        /// </summary>
+        const int CHANNEL_INTERNAL_OFFSET = 3;
 
         #endregion
 
@@ -89,7 +96,7 @@ namespace MindMurmur.Lights
         {
             if (channel <= 0 || channel > 512)
                 throw new ArgumentOutOfRangeException("Parameter 'channel' must be greater then 0 and less then or equal to 512");
-            SetShareData(channel + CHANNEL_OFFSET, (int)value);
+            SetShareData(channel + CHANNEL_OFFSET + CHANNEL_INTERNAL_OFFSET, (int)value);
         }
 
         public void SetChannelCount(short channels)

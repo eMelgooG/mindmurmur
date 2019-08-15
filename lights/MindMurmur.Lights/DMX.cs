@@ -23,7 +23,7 @@ namespace MindMurmur.Lights
         {
         }
 
-        async public Task Connect()
+        public void Connect()
         {
             Console.ForegroundColor = ConsoleColor.White; Console.WriteLine("[ ] Connecting to DMX Device...");
             ushort vendorId = 0x10CF;
@@ -39,10 +39,10 @@ namespace MindMurmur.Lights
                 Console.ForegroundColor = ConsoleColor.White; Console.WriteLine("[ ] Loading DMX Controller...");
                 DMXController = new DMXController();
                 DMXController.StartDevice();
-                DMXController.SetChannelCount(512);
-                await Task.Delay(2000);
-                DMXController.SetChannelCount(512);
-                await Task.Delay(2000);
+                DMXController.SetChannelCount(256);
+                Thread.Sleep(2000);
+                DMXController.SetChannelCount(256);
+                Thread.Sleep(2000);
                 Console.ForegroundColor = ConsoleColor.White; Console.WriteLine("[<] DMX: SetChannelCount: " + maxChannel);
                 IsConnected = true;
                 Console.ForegroundColor = ConsoleColor.Green; Console.WriteLine("[-] Connected");
@@ -58,37 +58,27 @@ namespace MindMurmur.Lights
             }
         }
 
-        //public byte[] GetDMXFromColors(IEnumerable<Color> LEDColors)
-        //{
-        //    if (LEDColors == null || !LEDColors.Any()) return null;
-        //    if (LEDColors.Count() > maxChannel / 3)
-        //        LEDColors = LEDColors.Take(maxChannel / 3);
+        public byte[] GetDMXFromColors(IEnumerable<Color> LEDColors)
+        {
+            if (LEDColors == null || !LEDColors.Any()) return null;
+            if (LEDColors.Count() > maxChannel / 3)
+                LEDColors = LEDColors.Take(maxChannel / 3);
 
-        //    byte[] channels = LEDColors.SelectMany((color) =>
-        //    {
-        //        var A = color.A / 255M;
-        //        var RGB = new ColorMine.ColorSpaces.Rgb() { R = (int)(color.R * A), G = (int)(color.G * A), B = (int)(color.B * A) };
-        //        var CMY = RGB.To<ColorMine.ColorSpaces.Cmy>();
-        //        // LAB
-        //        return new byte[] {
-        //            (byte)(15*CMY.C),
-        //            (byte)(15*CMY.M),
-        //            (byte)(15*CMY.Y)
-        //        };
-        //    }).ToArray();
+            byte[] channels = LEDColors.SelectMany((color) =>
+            {
+                var A = color.A / 255M;
+                var RGB = new ColorMine.ColorSpaces.Rgb() { R = (int)(color.R * A), G = (int)(color.G * A), B = (int)(color.B * A) };
+                var CMY = RGB.To<ColorMine.ColorSpaces.Cmy>();
+                // LAB
+                return new byte[] {
+                    (byte)(15*CMY.C),
+                    (byte)(15*CMY.M),
+                    (byte)(15*CMY.Y)
+                };
+            }).ToArray();
 
-        //    return channels;
-        //}
-
-        //public void SendDMXFrames(byte[] channelsdata)
-        //{
-        //    Debug.WriteLine($"{"SendDMXFrames"}: {BitConverter.ToString(channelsdata)}");
-
-        //    //// V3 k8062
-        //    for (int i = 0; i < 2; i++)
-        //        for (int channel = 0; channel < channelsdata.Length; channel++)
-        //            DMXController.SetChannel((short)(channel + 8 + (channelsdata.Length * i)), channelsdata[channel]);
-        //}
+            return channels;
+        }
 
         //public void SetColor(Color color)
         //{
@@ -97,11 +87,12 @@ namespace MindMurmur.Lights
         //    SendDMXFrames(dmxdata);
         //}
 
-        public async Task SetEdgeLightStrips(Color color)
+        public void SetEdgeLightStrips(Color color)
         {
             foreach (LightStrip strip in Config.VerticesLightStrips)
             {
-                var channels = strip.ChannelColors(color);
+                strip.SetColor(color);
+                var channels = strip.GetDMXChannelColors();
                 foreach (var key in channels.Keys)
                 {
                     //DataQueue.Enqueue(new DmxData(key, channels[key]));
@@ -110,11 +101,12 @@ namespace MindMurmur.Lights
             }
         }
 
-        public async Task SetChandelierLightStrips(Dictionary<short,Color> colors)
+        public void SetChandelierLightStrips(Dictionary<short,Color> colors)
         {
             foreach (var k in colors.Keys)
             {
-                var channels = Config.ChandelierLightStrips[k].ChannelColors(colors[k]);
+                Config.ChandelierLightStrips[k].SetColor(colors[k]);
+                var channels = Config.ChandelierLightStrips[k].GetDMXChannelColors();
                 foreach (var key in channels.Keys)
                 {
                     //DataQueue.Enqueue(new DmxData(key, channels[key]));
@@ -123,9 +115,10 @@ namespace MindMurmur.Lights
             }
         }
 
-        public async Task SetLightStripColor(LightStrip strip, Color color)
+        public void SetLightStripColor(LightStrip strip, Color color)
         {
-            var channels = strip.ChannelColors(color);
+            strip.SetColor(color);
+            var channels = strip.GetDMXChannelColors();
             foreach (var key in channels.Keys)
             {
                 //DataQueue.Enqueue(new DmxData(key, channels[key]));
@@ -146,18 +139,10 @@ namespace MindMurmur.Lights
         {
             Console.ForegroundColor = ConsoleColor.White; Console.WriteLine("[ ] Testing lights...");
 
-            foreach (var color in new Color[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Cyan, Color.Pink, Color.Purple, Color.White, Color.LightGray, Color.Gray, Color.DarkGray, Color.Black })
+            foreach (var color in new Color[] { Color.Red, Color.Orange, Color.Yellow, Color.Green, Color.Blue, Color.Cyan, Color.Purple, Color.Pink, Color.White, Color.LightGray, Color.Gray, Color.DarkGray, Color.Black })
             {
-                await SetLightStripColor(Config.VerticesLightStrips[0], color);
-                //foreach (LightStrip strip in Config.VerticesLightStrips)
-                //{
-                //    await SetLightStripColor(strip, color);
-                //}
-                //foreach (var k in Config.ChandelierLightStrips.Keys)
-                //{
-                //    await SetLightStripColor(Config.ChandelierLightStrips[k], color);
-                //}
-                await Task.Delay(400);
+                SetEdgeLightStrips(color);
+                await Task.Delay(250);
             }
             Console.ForegroundColor = ConsoleColor.Green; Console.WriteLine("[-] Done testing");
         }
@@ -191,7 +176,7 @@ namespace MindMurmur.Lights
 
         #endregion
 
-        private async Task StartQueueListening()
+        private void StartQueueListening()
         {
             //Task.Run(async () =>
             // {
