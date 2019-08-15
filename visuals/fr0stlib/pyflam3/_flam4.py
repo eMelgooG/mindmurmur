@@ -4,7 +4,7 @@ from fr0stlib.pyflam3.find_dll import find_dll
 
 
 libflam4 = find_dll('Flam4CUDA_LIB', omit_lib_in_windows=True)
-        
+
 
 LastRenderSize = 0, 0
 cudaRunning = False
@@ -126,7 +126,7 @@ class xForm(Structure):
                 , ('conic_eccen', c_float)
                 , ('parabola_height', c_float)
                 , ('parabola_width', c_float)
-            
+
                 , ('color', c_float)
                 , ('symmetry', c_float)
                 , ('weight', c_float)
@@ -155,7 +155,7 @@ class Flame(Structure):
                 , ('numTrans', c_int)
                 , ('isFinalXform', c_int)
                 , ('finalXform', xForm)
-                
+
                 ,('numColors', c_int)
                 ,('trans', POINTER(xForm))
                 ,('transAff', POINTER(unAnimatedxForm))
@@ -191,7 +191,7 @@ def loadFlam4(flame):
     for ci, color in zip(flam4Flame.colorIndex, flame.gradient):
         ci.r, ci.g, ci.b = (i/255. for i in color)
         ci.a = 1
-                
+
     flam4Flame.trans = (xForm*flam4Flame.numTrans)()
     uxf = (unAnimatedxForm*flam4Flame.numTrans)()
     flam4Flame.transAff = uxf
@@ -208,12 +208,12 @@ def loadFlam4(flame):
     if flam4Flame.isFinalXform:
         loadXform(flame.final, flam4Flame.finalXform)
     return flam4Flame
-    
+
 def loadXform(inxform, xform):
     for x in xform._fields_:
-        try:
+        if x[0] in inxform.__dict__ or x[0] in inxform.__class__.__dict__:
             object.__setattr__(xform, x[0],inxform.__getattribute__(x[0]))
-        except AttributeError:
+        else:
             object.__setattr__(xform, x[0],0)
     post = inxform.post
     xform.b = -xform.b
@@ -229,13 +229,13 @@ def loadXform(inxform, xform):
     # the color correctly.
     xform.symmetry = 1. - inxform.color_speed * 2
     return xform
-    
+
 def setTransAff(transAff, xform):
     transAff.a = xform.a
     transAff.b = xform.b
     transAff.d = xform.d
     transAff.e = xform.e
-    
+
 def renderFlam4(flame, size, quality, progress_func, transparent=False,
                 **kwds):
     global LastRenderSize, cudaRunning
