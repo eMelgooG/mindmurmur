@@ -1,8 +1,13 @@
+aubio
+construct
 Flask
 numpy
+patsy
 pika
-statsmodels
-swmixer
 pyaudio
 pygatt
-construct
+PySide
+rabbitmq
+statsmodels
+swmixer
+wave
