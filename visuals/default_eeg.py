@@ -188,6 +188,9 @@ class MMEngine():
         self.set_meditation_state(1, False)
         self.set_meditation_state(set_next=True)
 
+        # Listen to meditation state events
+        self.eeg_source.set_meditation_state_handler(self.set_meditation_state)
+
     def run(self):
         print("[>] RUNNING")
         self.keeprendering = True

@@ -91,6 +91,10 @@ class EEGSource(object):
             avgvalues.append(sum(values[i] for values in lastvalues) / len(lastvalues))
         return EEGData(avgvalues)
 
+    # let meditation state handler be set, by default does nothing
+    def set_meditation_state_handler(self, handler):
+        pass
+
 
 
 class EEGDummy(EEGSource):
@@ -171,14 +175,20 @@ class EEGFromRabbitMQ(EEGSource):
         # Access the CLODUAMQP_URL environment variable and parse it (fallback to localhost)
         self.rabbit = RabbitController(host, port, user, password, virtualhost)
         self.latest_data = None
-        self.listening_task = threading.Thread(name="eeg_data",
-                                               target=self.listen)
-        self.listening_task.daemon = True
-        self.listening_task.start()
+        self.meditation_state_handler = None
+        self.eeg_listening_task = threading.Thread(target=self.listen_eeg)
+        self.eeg_listening_task.daemon = True
+        self.eeg_listening_task.start()
 
-    def listen(self):
+        self.meditation_listening_task = threading.Thread(target=self.listen_meditation)
+        self.meditation_listening_task.daemon = True
+        self.meditation_listening_task.start()
+
+    def listen_eeg(self):
         self.rabbit.subscribe_eegdata(self.rabbitcallback)
 
+    def listen_meditation(self):
+        self.rabbit.subscribe_meditation(self.meditationcallback)
 
     def rabbitcallback(self, ch, method, properties, body):
         if(body is None or body == ''):
@@ -189,6 +199,18 @@ class EEGFromRabbitMQ(EEGSource):
     # iterate samples
     def read_new_data(self):
         return self.latest_data
+
+    def set_meditation_state_handler(self, handler):
+        self.meditation_state_handler = handler
+
+    def meditationcallback(self, ch, method, properties, body):
+        print(("received meditation command with body \"{body}\"").format(body=body))
+
+        command = json.loads(body)
+        meditation_state = command['State']
+
+        if self.meditation_state_handler is not None:
+            self.meditation_state_handler(meditation_state)
 
 class EEGFromAudioFile(EEGSource):
     def __init__(self, audio_source):
