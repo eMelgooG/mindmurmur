@@ -8,7 +8,7 @@ from common.rabbit_controller import RabbitController
 class EEGData():
     # inline values
     def __init__(self, values):
-        
+
         if(values is None):
             values = [0,0,0,0,0,0,0]
         self.values = values
@@ -21,7 +21,7 @@ class EEGData():
         self.delta = np.mean(values[self.channels * 3 : self.channels * 4])
         self.theta = np.mean(values[self.channels * 4 : self.channels * 5])
         self.raw_waves = values[0 : self.channels * 5]
-        
+
         # blink is 0 or 1
         self.blink = values[-2]
         # meditation_state is a value between 0 and 1
@@ -41,7 +41,7 @@ class EEGData():
 
     def console_string(self):
         return "".join(format(int(wav*10)) for wav in self.waves) + " - " + format(round(self.meditation_state,1))
-    
+
 
 class EEGSource(object):
     def __init__(self):
@@ -51,7 +51,7 @@ class EEGSource(object):
         # + blink = 21
         self.raw_data = [0.0] * 21
         self.data_history = []
-        
+
     def read_data(self):
         # add new EEGdata to history
         data = self.read_new_data()
@@ -63,13 +63,13 @@ class EEGSource(object):
             self.data_history.pop(0)
         # and return it
         return self.get_smooth_data()
-    
+
     # read_new_data is an abstract method to implement
     # in child classes. It returns a new EEGData to be added to the source
     # history of data.
     def read_new_data(self):
         return EEGData(self.raw_data)
-    
+
     # returns the latest data from source history
     def get_data(self):
         if(self.data_history is None or len(self.data_history) == 0):
@@ -90,7 +90,7 @@ class EEGSource(object):
         for i in range(len(lastvalues[0])):
             avgvalues.append(sum(values[i] for values in lastvalues) / len(lastvalues))
         return EEGData(avgvalues)
-    
+
 
 
 class EEGDummy(EEGSource):
@@ -171,8 +171,9 @@ class EEGFromRabbitMQ(EEGSource):
         # Access the CLODUAMQP_URL environment variable and parse it (fallback to localhost)
         self.rabbit = RabbitController(host, port, user, password, virtualhost)
         self.latest_data = None
-        self.listening_task = threading.Thread(name="eeg_data", 
+        self.listening_task = threading.Thread(name="eeg_data",
                                                target=self.listen)
+        self.listening_task.daemon = True
         self.listening_task.start()
 
     def listen(self):
@@ -191,7 +192,7 @@ class EEGFromRabbitMQ(EEGSource):
 
 class EEGFromAudioFile(EEGSource):
     def __init__(self, audio_source):
-        super(EEGFromAudioFile, self).__init__() 
+        super(EEGFromAudioFile, self).__init__()
         print('EEGFromAudioFile Started')
         self.audio_source = audio_source
         # blink
@@ -229,7 +230,7 @@ class EEGFromAudioFile(EEGSource):
         #for i in xrange(len(bins) - 1):
         #    bins[i] = np.mean(fft[indices[i]:indices[i+1]]).astype(int)
         #bins[-1] = np.mean(fft[indices[-1]:]).astype(int)
-        
+
         step = int(len(fft) / len(freqs))
         for i in range(len(freqs)):
             freqs[i] = np.mean(fft[i:i+step]) / float(self.audio_source.get_sample_max()) / 10
@@ -244,7 +245,7 @@ class EEGFromAudioFile(EEGSource):
 
 class EEGFromAudio(EEGSource):
     def __init__(self, audio_source):
-        super(EEGFromAudio, self).__init__() 
+        super(EEGFromAudio, self).__init__()
         print('EEGFromAudio Started')
         self.audio_source = audio_source
         # blink
@@ -283,7 +284,7 @@ class EEGFromAudio(EEGSource):
         #for i in xrange(len(bins) - 1):
         #    bins[i] = np.mean(fft[indices[i]:indices[i+1]]).astype(int)
         #bins[-1] = np.mean(fft[indices[-1]:]).astype(int)
-        
+
         step = int(len(fft) / len(freqs))
         for i in range(len(freqs)):
             freqs[i] = np.mean(fft[i:i+step]) / float(self.audio_source.get_sample_max()) / 10
