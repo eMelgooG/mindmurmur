@@ -1,7 +1,6 @@
 import logging
 import time
 import math
-import md5
 import numpy
 import os
 import re
@@ -128,9 +127,8 @@ class MMEngine():
         self.channels = 24
         self.sinelength = 300 # frames
         self.gui = gui
-        self.maxfps = 20 # target frames per second
+        self.maxfps = 20
         self.states_flames = []
-        self.meditation_state = 1
         self.user_connected = False
 
         # init rabbitMQ connection
@@ -151,13 +149,27 @@ class MMEngine():
         # sets the frame at which the user disconnected
         self.disconnected_at = None
 
-        # Init to meditation level 1
+        # Init and transition so animation begins right away
+        self.set_meditation_state(1, False)
         self.set_meditation_state(set_next=True)
 
     def run(self):
         print("[>] RUNNING")
         self.keeprendering = True
+        current_second = math.floor(time.clock())
+        frames_this_second = 0
         while self.keeprendering:
+            # fps timer
+            t0 = time.clock()
+
+            # fps counting
+            latest_second = math.floor(time.clock())
+            if current_second != latest_second:
+                # rolled over into a new second, print FPS
+                print("FPS: %d" % frames_this_second)
+                current_second = latest_second
+                frames_this_second = 0
+
             try:
                 if(self.user_connected):
                     self.user_connected_frame()
@@ -176,6 +188,12 @@ class MMEngine():
                 print('[!] error during MMEngine RUN loop: ' + str(ex))
                 traceback.print_exc()
                 self.keeprendering = False
+            finally:
+                # sleep to keep a decent fps
+                delay = t0 + 1./self.maxfps - time.clock()
+                if delay > 0. : time.sleep(delay)
+                else :  time.sleep(0.01)
+                frames_this_second += 1
         self.stop()
 
 
@@ -391,9 +409,7 @@ class MMEngine():
         try:
             # animate one xform at a time
             form = flame_to_move.xform[self.frame_index_sincestate % len(flame_to_move.xform)]
-            print('about to go in core animate', form.animate, eegdata)
             if(form.animate and eegdata is not None):
-                print('in core animate')
                 # ROTATION
                 # calculate rotation amount from BETA
                 rotate_delta = eegdata.beta
