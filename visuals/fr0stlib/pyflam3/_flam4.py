@@ -189,7 +189,7 @@ def loadFlam4(flame):
     flam4Flame.colorIndex = (rgba*flam4Flame.numColors)()
 
     for ci, color in zip(flam4Flame.colorIndex, flame.gradient):
-        ci.r, ci.g, ci.b = (i/255. for i in color)
+        ci.r, ci.g, ci.b = color[0]/255., color[1]/255., color[2]/255.
         ci.a = 1
 
     flam4Flame.trans = (xForm*flam4Flame.numTrans)()
