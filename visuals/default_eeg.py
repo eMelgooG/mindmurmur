@@ -21,29 +21,46 @@ from input_controller import InputController
 class RenderPanel(wx.Panel):
     def __init__(self, parent, renderer):
         wx.Panel.__init__(self, parent)
+        self.parent = parent
         self.renderer = renderer
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.bmp = wx.EmptyBitmap(1, 1, 32)
+        self.current_second = math.floor(time.clock())
+        self.renders_this_second = 0
 
     def render(self, flame):
-        # REVISIT: if needed, consider rendering on a background thread instead of the run thread, ala fr0st renderer.
         pw, ph = map(float, self.Size)
         fw, fh = map(float, flame.size)
         ratio = min(pw/fw, ph/fh)
         size = int(fw * ratio), int(fh * ratio)
+        self.renderer.enqueue_render(flame, size, self.render_complete)
 
-        self.bmp = self.renderer.render(flame, size)
+    def render_complete(self, size, output_buffer):
+        this_second = math.floor(time.clock())
+        if self.current_second != this_second:
+            # rolled over into a new second, print FPS
+            print("Renders/sec: %d" % self.renders_this_second)
+            self.current_second = this_second
+            self.renders_this_second = 0
+
+        w, h = size
+        self.bmp = wx.BitmapFromBufferRGBA(w, h, output_buffer)
         self.Refresh()
+        self.renders_this_second += 1
 
     def OnPaint(self, event):
         fw,fh = self.bmp.GetSize()
         pw,ph = self.Size
-        dc = wx.PaintDC(self)
+        dc = wx.BufferedDC(wx.PaintDC(self))
         dc.DrawBitmap(self.bmp, (pw-fw)/2, (ph-fh)/2, True)
 
     def OnEraseBackground(self, event):
         pass # avoid flicker
+
+    def OnLeftDown(self, event):
+        self.parent.SetFocus()
 
 
 class RenderFrame(wx.Frame):
@@ -96,23 +113,41 @@ render_funcs = {'flam3': flam3_render,
 class Renderer():
     def __init__(self):
         self.render_func = render_funcs['flam4']
-        self.bitmap_func = wx.BitmapFromBufferRGBA
         self.settings = {'estimator': 0.0,
                          'filter_radius': 0.25,
                          'quality': 10,
                          'spatial_oversample': 2,
                          'progress_func': self.progress}
+        self.queue = []
+        self.keeprendering = True
+        self.start_worker()
 
-    def render(self, flame, size):
+    def start_worker(self):
+        worker_thread = threading.Thread(target=self.worker)
+        worker_thread.daemon = True
+        worker_thread.start()
+
+    def worker(self):
         try:
-            output_buffer = self.render_func(flame, size, **self.settings)
-        except Exception:
-            # Make sure rendering never crashes due to malformed flames.
-            traceback.print_exc()
-            return
+            while self.keeprendering:
+                if self.queue:
+                    (flame, size, complete_callback) = self.queue.pop()
+                    try:
+                        output_buffer = self.render_func(flame, size, **self.settings)
+                    except Exception:
+                        # Make sure rendering never crashes due to malformed flames.
+                        traceback.print_exc()
+                        next
 
-        w, h = size
-        return self.bitmap_func(w, h, output_buffer)
+                    complete_callback(size, output_buffer)
+                else:
+                    time.sleep(0.005) # max 200 queue inspections/sec
+        except wx.PyDeadObjectError:
+            pass # happens when Mind Murmur is stopped
+
+    def enqueue_render(self, flame, size, complete_callback):
+        if not len(self.queue):
+            self.queue.append((flame, size, complete_callback))
 
     def progress(self, py_object, progress, stage, eta):
         pass
@@ -127,7 +162,7 @@ class MMEngine():
         self.channels = 24
         self.sinelength = 300 # frames
         self.gui = gui
-        self.maxfps = 20
+        self.maxfps = 60
         self.states_flames = []
         self.user_connected = False
 
@@ -191,8 +226,8 @@ class MMEngine():
             finally:
                 # sleep to keep a decent fps
                 delay = t0 + 1./self.maxfps - time.clock()
-                if delay > 0. : time.sleep(delay)
-                else :  time.sleep(0.01)
+                if delay > 0.:
+                    time.sleep(delay)
                 frames_this_second += 1
         self.stop()
 
@@ -263,6 +298,7 @@ class MMEngine():
     def stop(self):
         print("[>] STOP")
         self.keeprendering = False
+        self.gui.image.renderer.keeprendering = False
         self.gui.stop()
 
     def zoom(self, zoomamount = 1):
