@@ -41,7 +41,7 @@ class RenderPanel(wx.Panel):
         this_second = math.floor(time.clock())
         if self.current_second != this_second:
             # rolled over into a new second, print FPS
-            print("Renders/sec: %d" % self.renders_this_second)
+            #print("Renders/sec: %d" % self.renders_this_second)
             self.current_second = this_second
             self.renders_this_second = 0
 
@@ -201,7 +201,7 @@ class MMEngine():
             latest_second = math.floor(time.clock())
             if current_second != latest_second:
                 # rolled over into a new second, print FPS
-                print("FPS: %d" % frames_this_second)
+                #print("FPS: %d" % frames_this_second)
                 current_second = latest_second
                 frames_this_second = 0
 
