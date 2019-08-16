@@ -41,5 +41,6 @@ if '%errorlevel%' NEQ '0' (
 :--------------------------------------
 
 cd visuals
+:loop
 python default_eeg.py
-pause
+goto loop
