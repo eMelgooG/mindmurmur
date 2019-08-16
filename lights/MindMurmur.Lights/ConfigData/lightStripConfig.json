@@ -1,58 +1,58 @@
 [
   {
-    "Index": 7, //when elar driver address is set to 1 -- so it is driver switch is + 6
+    "Index": 1, //when elar driver address is set to 1
     "Offset": 4,
     "Dimmer": -1,
     "HonorAlpha": false,
     "LEDList": [
       {
-        "Index": 7,
-        "AlphaChannel": 7,
-        "RedChannel": 8,
-        "GreenChannel": 9,
-        "BlueChannel": 10
+        "Index": 1,
+        "AlphaChannel": 1,
+        "RedChannel": 2,
+        "GreenChannel": 3,
+        "BlueChannel": 4
       }
     ]
   },{
-    "Index": 12, //when elar driver address is set to 8 (1 off, 2 on, 3 on) -- so it is driver switch is + 6
+    "Index": 5, //when elar driver address is set to 5
     "Offset": 4,
     "Dimmer": -1,
     "HonorAlpha": false,
     "LEDList": [
       {
-        "Index": 12,
-        "AlphaChannel": 12,
-        "RedChannel": 13,
-        "GreenChannel": 14,
-        "BlueChannel": 15
+        "Index": 5,
+        "AlphaChannel": 5,
+        "RedChannel": 6,
+        "GreenChannel": 7,
+        "BlueChannel": 8
       }
     ]
   },{
-    "Index": 16, //when elar driver address is set to 10 (1:off, 2:on, 3:off, 4:on) -- so it is driver switch is + 6
+    "Index": 9, //when elar driver address is set to 9
     "Offset": 4,
     "Dimmer": -1,
     "HonorAlpha": false,
     "LEDList": [
       {
-        "Index": 16,
-        "AlphaChannel": 16,
-        "RedChannel": 17,
-        "GreenChannel": 18,
-        "BlueChannel": 19
+        "Index": 9,
+        "AlphaChannel": 9,
+        "RedChannel": 10,
+        "GreenChannel": 11,
+        "BlueChannel": 12
       }
     ]
   },{
-    "Index": 20, //when elar driver address is set to 14 (1:off, 2:on, 3:on, 4:on) -- so it is driver switch is + 6
+    "Index": 13, //when elar driver address is set to 13
     "Offset": 4,
     "Dimmer": -1,
     "HonorAlpha": false,
     "LEDList": [
       {
-        "Index": 20,
-        "AlphaChannel": 20,
-        "RedChannel": 21,
-        "GreenChannel": 22,
-        "BlueChannel": 23
+        "Index": 13,
+        "AlphaChannel": 13,
+        "RedChannel": 14,
+        "GreenChannel": 15,
+        "BlueChannel": 16
       }
     ]
   }
