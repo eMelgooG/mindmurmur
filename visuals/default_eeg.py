@@ -144,11 +144,6 @@ class MMEngine():
                 # [>] set new state
                 self.set_meditation_state(eegdata.meditation_state)
 
-            #TODO get heartbeat
-            heartbeat = 60
-            # send data to RabbitMQ bus
-            self.rabbit.publish_heart(heartbeat)
-
             # transform fractal with new values from data
             self.animate(eegdata)
 
