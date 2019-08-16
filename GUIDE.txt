@@ -1,0 +1,28 @@
+Wifi setup for Muse headset
+
+1. Open the wifi menu at the bottom-right next to the clock. Click "Mobile Hotspot" so it turns blue. The laptop is now acting as a wifi network.
+2. Right-click the blue icon and click "Settings".
+3. Take the Android phone and connect it to the wifi network using the network name and password shown.
+4. Back on the laptop, you will see a left sidebar in the Settings window. Under Network & Internet, click on "Status".
+5. Click "View your network properties".
+6. On the phone, start Muse Monitor and go to its settings.
+7. In Muse Monitor settings, confirm that the "OSC Stream Port" is set to 7000.
+8. In Muse Monitor settings, confirm that the "OSC Stream Target IP" is one of the IPv4 addresses that is "Operational", from step 5.
+9. In Muse Monitor, go back and in the bottom bar, tap the icon that looks like 2 circles (just to the left of the red recor button).
+A popup will appear above the bottom bar saying "Streaming to x.x.x.x:7000"
+10. To test:
+  a. Go to the mindmurmur files
+  b. Run "run_osc.bat"
+  c. Power the headset on
+  d. Connect the to Muse Monitor and get it positioned so the horseshoe disappears
+  e. On the laptop, confirm that non-zero values appear in the output
+11. When done testing, close the window that popped up from "run_osc.bat".
+
+If you do not see the nonzero EEG values coming through, it means you have the wrong IPv4 address in Muse Monitor, or Muse Monitor streaming is not enabled.
+You should try one of the other IPv4 addresses that is "Operational", from step 5.
+
+If Muse Monitor will not connect to the Muse headset, kill it and try again (bottom left button on the phone).
+
+Starting everything
+
+1. Double-click "run_all.bat", or the shortcut on the desktop. 
