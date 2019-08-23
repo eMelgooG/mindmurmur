@@ -1,9 +1,11 @@
 import math
 import time
+import threading
 import traceback
 import wx
 
 from fr0stlib.pyflam3 import _flam4
+from fr0stlib import Flame
 
 class RenderPanel(wx.Panel):
     def __init__(self, parent, renderer):
