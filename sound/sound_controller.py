@@ -180,7 +180,7 @@ class MindMurmurSoundScapeController(object):
 			# play transition indication
 			logging.info("playing transition")
 			transition_indication_sound = swmixer.Sound(stage_change_indication_filename)
-			transition_channel = transition_indication_sound.play()
+			transition_channel = transition_indication_sound.play(volume=0.1)
 			self.playing_transitions.append(transition_channel)
 
 			time.sleep(9 - (time.time() - start_time_seconds))
