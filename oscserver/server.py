@@ -20,7 +20,7 @@ EMIT_STAGE_PERIOD_SECONDS = 60  # evaluating stages every minute
 EMIT_EEGDATA_PERIOD_SECONDS = 1  # evaluating eegdata every second
 LISTEN_FOR_KEY_SECONDS = 0.05 # listening to keys 20 times per second
 ARIMA_PARAMS = (4, 0, 1)
-LOWER_THRESHOLD = -0.04
+LOWER_THRESHOLD = -0.03
 UPPER_THRESHOLD = 0.01
 
 logger = logging.getLogger(__name__)
@@ -107,10 +107,13 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
     def predict_next_level(self):
         while not self._stop.is_set():
             self._stop.wait(EMIT_STAGE_PERIOD_SECONDS)
-            data = np.array(self.queue, dtype=np.float64)
-            model = arima_model.ARIMA(data, order=ARIMA_PARAMS)
-            model = model.fit(disp=0)
-            forecast = model.predict(start=1, end=20)
+            try:
+                data = np.array(self.queue, dtype=np.float64)
+                model = arima_model.ARIMA(data, order=ARIMA_PARAMS)
+                model = model.fit(disp=0)
+                forecast = model.predict(start=1, end=20)
+            except ValueError:
+                print("Skipping state evaluation due to insufficient amount of data collected.")
             data_filtered = data[np.where(np.logical_and(np.greater_equal(data, np.percentile(data, 5)),
                                                          np.less_equal(data, np.percentile(data, 95))))]
             mean_diff = np.mean(forecast) - np.mean(data_filtered)
