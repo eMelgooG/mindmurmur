@@ -114,6 +114,7 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
                 forecast = model.predict(start=1, end=20)
             except ValueError:
                 print("Skipping state evaluation due to insufficient amount of data collected.")
+                return
             data_filtered = data[np.where(np.logical_and(np.greater_equal(data, np.percentile(data, 5)),
                                                          np.less_equal(data, np.percentile(data, 95))))]
             mean_diff = np.mean(forecast) - np.mean(data_filtered)
