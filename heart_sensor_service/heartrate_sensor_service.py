@@ -66,6 +66,7 @@ class HeartrateSensorService(object):
         while not self._stop.is_set():
             try:
                 if self.heart_rate_value:
+                    print("publishing HR " + str(self.heart_rate_value))
                     self.rabbit.publish_heart(self.heart_rate_value)
                 time.sleep(self.polling_interval)
             except Exception:
@@ -79,21 +80,21 @@ class HeartrateSensorService(object):
     def _receive_data_callback(self, _, raw_data):
         try:
             packet_dict = {}
-            byte_1_data_container = PARSING_SCHEMA[0].parse(to_bytes(raw_data[0], 1, 'big'))
-            byte_3_data_container = PARSING_SCHEMA[2].parse(to_bytes(raw_data[2], 1, 'big'))
-            packet_dict['signal_strength'] = byte_1_data_container['signal_strength']
-            packet_dict['has_signal'] = byte_1_data_container['has_signal']
-            packet_dict['bargraph'] = byte_3_data_container['bargraph']
-            packet_dict['no_finger'] = byte_3_data_container['no_finger']
-            packet_dict['spo2'] = raw_data[4]
-            packet_dict['pleth'] = int(raw_data[1])
-            packet_dict['pulse_rate'] = int(raw_data[3] | ((raw_data[2] & 0x40) << 1))
-            packet_dict['timestamp'] = str(datetime.datetime.now())
-            hr_object = HeartRateData(**packet_dict)
-            if hr_object.pleth >= 100 or hr_object.pulse_rate >= 110:
+            # byte_1_data_container = PARSING_SCHEMA[0].parse(to_bytes(raw_data[0], 1, 'little'))
+            # byte_3_data_container = PARSING_SCHEMA[2].parse(to_bytes(raw_data[2], 1, 'little'))
+            # packet_dict['signal_strength'] = byte_1_data_container['signal_strength']
+            # packet_dict['has_signal'] = byte_1_data_container['has_signal']
+            # packet_dict['bargraph'] = byte_3_data_container['bargraph']
+            # packet_dict['no_finger'] = byte_3_data_container['no_finger']
+            # packet_dict['spo2'] = raw_data[4]
+            pleth = int(raw_data[1])
+            pulse_rate = int(raw_data[3] | ((raw_data[2] & 0x40) << 1))
+            ts = str(datetime.datetime.now())
+            # hr_object = HeartRateData(**packet_dict)
+            if pleth >= 100 or pulse_rate >= 110:
                 # most likely corrupted data
                 return
-            self.heart_rate_value = hr_object.pulse_rate
+            self.heart_rate_value = pulse_rate
         except Exception as e:
             logging.debug('Error on parsing raw heart rate data:')
             logging.exception(e)
