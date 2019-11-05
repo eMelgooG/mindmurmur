@@ -130,7 +130,7 @@ class Renderer():
                     complete_callback(size, output_buffer)
                 else:
                     time.sleep(0.005) # max 200 queue inspections/sec
-        except wx.PyDeadObjectError:
+        except:
             pass # happens when Mind Murmur is stopped
 
     def enqueue_render(self, flame, size, complete_callback):
