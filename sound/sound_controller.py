@@ -185,6 +185,8 @@ class MindMurmurSoundScapeController(object):
 
 			time.sleep(9 - (time.time() - start_time_seconds))
 
+			self.playing_tracks[-1].stop()
+
 		# mix in sound scape for stage
 		track_sound = swmixer.Sound(track_filename)
 		offset = 0
