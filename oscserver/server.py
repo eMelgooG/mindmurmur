@@ -113,6 +113,7 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
         Thread(target=self.auto_advance_level, daemon=True).start()
 
     def predict_next_level(self):
+        rabbit = RabbitController('localhost', 5672, 'guest', 'guest', '/')
         while not self._stop.is_set():
             self._stop.wait(EMIT_STAGE_PERIOD_SECONDS)
             try:
@@ -136,22 +137,24 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
 
             # send to the bus
             print("[ ] EMITTING STATE: %s" %(self.state))
-            self.rabbit.publish_state(self.state)
+            rabbit.publish_state(self.state)
             self.state_last_published = datetime.datetime.now()
 
             with self.lock:
                 self.blink_events = 0
 
     def update_rawvalues(self):
+        rabbit = RabbitController('localhost', 5672, 'guest', 'guest', '/')
         while not self._stop.is_set():
             self._stop.wait(EMIT_EEGDATA_PERIOD_SECONDS)
             # set state in raw_valceiceilues
             self.raw_values[21] = int(self.state)
             # send to the bus
             print("[ ] EMITTING EEGDATA: %s" %(self.raw_values))
-            self.rabbit.publish_eegdata(self.raw_values)
+            rabbit.publish_eegdata(self.raw_values)
 
     def listen_for_keys(self):
+        rabbit = RabbitController('localhost', 5672, 'guest', 'guest', '/')
         while not self._stop.is_set():
             self._stop.wait(LISTEN_FOR_KEY_SECONDS)
             if msvcrt.kbhit():
@@ -161,10 +164,11 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
                     if key in ['1', '2', '3', '4', '5']:
                         self.state = int(key)
                         print("[ ] PRESSED KEY '%s', EMITTING STATE: %s" %(key, self.state))
-                        self.rabbit.publish_state(self.state)
+                        rabbit.publish_state(self.state)
                         self.state_last_published = datetime.datetime.now()
 
     def auto_advance_level(self):
+        rabbit = RabbitController('localhost', 5672, 'guest', 'guest', '/')
         while not self._stop.is_set():
             self._stop.wait(AUTO_ADVANCE_LEVEL_PERIOD_SECONDS)
 
@@ -193,7 +197,7 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
 
                 advancing_direction = "UPWARDS" if self.levels_advance_upwards else "DOWNWARDS"
                 print("[ ] AUTOMATICALLY ADVANCING %s, EMITTING STATE: %s" %(advancing_direction, self.state))
-                self.rabbit.publish_state(self.state)
+                rabbit.publish_state(self.state)
                 self.state_last_published = datetime.datetime.now()
 
 if __name__ == '__main__':
