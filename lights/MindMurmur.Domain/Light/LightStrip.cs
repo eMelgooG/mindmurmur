@@ -119,5 +119,28 @@ namespace MindMurmur.Domain.Light
             }
         }
 
+        public Dictionary<short, byte> GetDMXChannelColors()
+        {
+
+            var rtn = new Dictionary<short, byte>();
+            foreach (LED led in LEDList)
+            {
+                var red = HonorAlpha ? led.Red : led.Red.ApplyDimmer(led.Alpha, Dimmer);
+                var green = HonorAlpha ? led.Green : led.Green.ApplyDimmer(led.Alpha, Dimmer);
+                var blue = HonorAlpha ? led.Blue : led.Blue.ApplyDimmer(led.Alpha, Dimmer);
+
+                var A = led.Alpha / 255M;
+                // var RGB = new ColorMine.ColorSpaces.Rgb() { R = (int)(color.R * A), G = (int)(color.G * A), B = (int)(color.B * A) };
+                var RGB = new ColorMine.ColorSpaces.Rgb() { R = (int)(red), G = (int)(green), B = (int)(blue) };
+                var CMY = RGB.To<ColorMine.ColorSpaces.Cmy>();
+                // LAB
+                rtn.Add((short)(led.Index + 0), (byte)(15 * CMY.C));
+                rtn.Add((short)(led.Index + 1), (byte)(15 * CMY.M));
+                rtn.Add((short)(led.Index + 2), (byte)(15 * CMY.Y));
+
+            }
+            return rtn;
+        }
+
     }
 }

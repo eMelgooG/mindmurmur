@@ -77,7 +77,7 @@ class MindMurmurSoundScapeController(object):
 			logging.info("requested stage is already playing, ignoring")
 		else:
 			stage_track = self._get_meditation_stage_soundscape_track_for_stage(desired_stage)
-			stage_change_direction = desired_stage - (self.current_stage or 0)
+			stage_change_direction = desired_stage - (self.current_stage or 1)
 
 			transition_track = (self.up_transition_sound_filename if stage_change_direction > 0 else
 								self.down_transition_sound_filename)
@@ -180,10 +180,12 @@ class MindMurmurSoundScapeController(object):
 			# play transition indication
 			logging.info("playing transition")
 			transition_indication_sound = swmixer.Sound(stage_change_indication_filename)
-			transition_channel = transition_indication_sound.play()
+			transition_channel = transition_indication_sound.play(volume=0.1)
 			self.playing_transitions.append(transition_channel)
 
 			time.sleep(9 - (time.time() - start_time_seconds))
+
+			self.playing_tracks[-1].stop()
 
 		# mix in sound scape for stage
 		track_sound = swmixer.Sound(track_filename)
@@ -252,7 +254,7 @@ class MindMurmurSoundScapeController(object):
 
 
 	def play_heartbeat_for_stage(self):
-		stage_heartbeat = self._get_meditation_stage_heartbeat_track_for_stage(self.current_stage or 0)
+		stage_heartbeat = self._get_meditation_stage_heartbeat_track_for_stage(self.current_stage or 1)
 		self._play_heartbeat(stage_heartbeat)
 
 

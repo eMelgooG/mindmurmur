@@ -18,7 +18,7 @@ namespace MindMurmur.Lights
             //initialize config
             Config.Init();
             //StartLightManagerTest();
-            //StartTimerForTestEvents();
+            // StartTimerForTestEvents();
             StartLightManager();
             Console.WriteLine("Listening for messages. Hit < return > to quit.");
         }

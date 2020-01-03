@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import msvcrt
 import numpy as np
@@ -18,6 +19,9 @@ QUEUE_SIZE = 300  # band powers are calculated at 10hz, storing a 30 seconds wor
 
 EMIT_STAGE_PERIOD_SECONDS = 60  # evaluating stages every minute
 EMIT_EEGDATA_PERIOD_SECONDS = 1  # evaluating eegdata every second
+AUTO_ADVANCE_LEVEL_PERIOD_SECONDS = 1 # check for auto advance level every second
+AUTO_ADVANCE_AFTER_SECONDS_WHILE_HEADSET_WORN = 120 # auto advance levels every 2 minutes while meditator in session
+AUTO_ADVANCE_AFTER_SECONDS_WHILE_HEADSET_OFF = 600 # auto advance levels every 10 minutes while no one is meditating
 LISTEN_FOR_KEY_SECONDS = 0.05 # listening to keys 20 times per second
 ARIMA_PARAMS = (4, 0, 1)
 LOWER_THRESHOLD = -0.03
@@ -43,7 +47,7 @@ class OscUDPHandler(socketserver.BaseRequestHandler):
             message = OscBundle(dgram).content(0) \
                 if OscBundle.dgram_is_bundle(dgram) \
                 else OscMessage(dgram)
-        logger.info('{address} {params}'.format(address=message.address, 
+        logger.info('{address} {params}'.format(address=message.address,
                                                 params=message.params))
         if message.address == '/muse/elements/alpha_absolute':
             # print('got alpha ' + str(message.params))
@@ -84,6 +88,8 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
         self.queue = deque(maxlen=QUEUE_SIZE)  # we only use append, therefore no need in queue.Queue
         self.blink_events = 0  # counter of blink events
         self.state = None
+        self.state_last_published = None
+        self.levels_advance_upwards = True # auto advance is moving upwards
         self.raw_values = [0] * 22
         self.lock = Lock()
         self._stop = Event()
@@ -100,9 +106,11 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
     def start_emitting_messages(self):
         self.state = 1
         self.rabbit.publish_state(self.state)
+        self.state_last_published = datetime.datetime.now()
         Thread(target=self.predict_next_level, daemon=True).start()
         Thread(target=self.update_rawvalues, daemon=True).start()
         Thread(target=self.listen_for_keys, daemon=True).start()
+        Thread(target=self.auto_advance_level, daemon=True).start()
 
     def predict_next_level(self):
         while not self._stop.is_set():
@@ -121,12 +129,15 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
             # add more logic there considering movement and blinks
             if mean_diff > UPPER_THRESHOLD:
                 self.state = min(self.state + 1, 5)
+                self.levels_advance_upwards = True # auto advance up after upward transition
             elif mean_diff < LOWER_THRESHOLD:
                 self.state = max(self.state - 1, 1)
+                self.levels_advance_upwards = False # auto advance down after downward transition
 
             # send to the bus
             print("[ ] EMITTING STATE: %s" %(self.state))
             self.rabbit.publish_state(self.state)
+            self.state_last_published = datetime.datetime.now()
 
             with self.lock:
                 self.blink_events = 0
@@ -151,7 +162,39 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
                         self.state = int(key)
                         print("[ ] PRESSED KEY '%s', EMITTING STATE: %s" %(key, self.state))
                         self.rabbit.publish_state(self.state)
+                        self.state_last_published = datetime.datetime.now()
 
+    def auto_advance_level(self):
+        while not self._stop.is_set():
+            self._stop.wait(AUTO_ADVANCE_LEVEL_PERIOD_SECONDS)
+
+            # headset is worn if nonzero values exist in the queue
+            headset_worn = False
+            for value in self.raw_values[0:20]:
+                if value > 0:
+                    headset_worn = True
+                    break
+
+            seconds_since_state_publish = (datetime.datetime.now() - self.state_last_published).total_seconds()
+
+            should_advance_headset_worn = headset_worn and seconds_since_state_publish > AUTO_ADVANCE_AFTER_SECONDS_WHILE_HEADSET_WORN
+            should_advance_headset_off = not headset_worn and seconds_since_state_publish > AUTO_ADVANCE_AFTER_SECONDS_WHILE_HEADSET_OFF
+
+            should_advance = should_advance_headset_worn or should_advance_headset_off
+
+            if should_advance:
+                if self.state >= 5:
+                    self.levels_advance_upwards = False
+                if self.state <= 1:
+                    self.levels_advance_upwards = True
+
+                next_state = self.state + 1 if self.levels_advance_upwards else self.state - 1
+                self.state = next_state
+
+                advancing_direction = "UPWARDS" if self.levels_advance_upwards else "DOWNWARDS"
+                print("[ ] AUTOMATICALLY ADVANCING %s, EMITTING STATE: %s" %(advancing_direction, self.state))
+                self.rabbit.publish_state(self.state)
+                self.state_last_published = datetime.datetime.now()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

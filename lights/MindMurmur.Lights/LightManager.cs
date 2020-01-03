@@ -35,6 +35,8 @@ namespace MindMurmur.Lights
         private Bitmap fromTransitionBitmapTertiaryColor = new Bitmap(51, 2);
         private Bitmap toTransitionBitmapTertiaryColor = new Bitmap(51, 2);
         private Bitmap meditativeStateBitmapColor = new Bitmap(101, 2);
+
+        private bool hitched_to_bus = false;
         private int currentHeartRate = 20;
         private short startingChandelierIndex = 1;
         private short chandelierColorIndex = 1;
@@ -51,8 +53,8 @@ namespace MindMurmur.Lights
 
         #region Public Properties
 
-        public MeditationState PreviousMediationState { get; set; }
-        public MeditationState CurrentMediationState { get; set; }
+        public volatile MeditationState PreviousMediationState;
+        public volatile MeditationState CurrentMediationState;
         private int CurrentHeartRate
         {
             get { return (secondsFromLastTransition > 15.0) ? currentHeartRate / 2 : currentHeartRate; }
@@ -332,13 +334,11 @@ namespace MindMurmur.Lights
             //int alpha = (int)(255 * (1 - Math.Sin(pulsetime * Math.PI)));
             //Color fadedColor = Color.FromArgb(alpha, color.R, color.G, color.B);
 
-            //byte[] dmx = this.LightDMX.GetDMXFromColors(new List<Color> { fadedColor });
-            //LightDMX.SendDMXFrames(dmx);
             LightDMX.SetEdgeLightStrips(fadedColor);
 
             LightDMX.SetChandelierLightStrips(GetChandelierColors( new List<Color>(){ fadedColor, fadedSecondaryColor, fadedTertiaryColor }));
 
-            Console.WriteLine($"LED COLOR: {fadedColor.ToString()}");
+            Console.ForegroundColor = ConsoleColor.Yellow; Console.WriteLine("[ ] LED COLOR: " + fadedColor.ToString());
         }
 
         public void StartChandelierCycle(int amountOfTimeSeconds, int frequencySeconds)
@@ -368,7 +368,7 @@ namespace MindMurmur.Lights
             try
             {
                 if (LightDMX != null)
-                    await LightDMX.Connect();
+                    LightDMX.Connect();
             }
             catch (Exception ex)
             {
@@ -376,6 +376,10 @@ namespace MindMurmur.Lights
             }
 
             if (CurrentHeartRate < 20) CurrentHeartRate = 20;
+
+            //sets up bus connection and subscribes
+            Console.ForegroundColor = ConsoleColor.White; Console.WriteLine("[ ] Subscribing to the bus...");
+            HitchToTheBus();
 
             // set pulse timer @ 25 FPS to update LEDs
             heartRatePulseTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(40));
@@ -386,94 +390,112 @@ namespace MindMurmur.Lights
         /// </summary>
         public void HitchToTheBus()
         {
+            if (hitched_to_bus)
+                return;
             var bus = RabbitHutch.CreateBus("host=localhost").Advanced;
 
-            var heartRateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable:true);
-            var heartRateQueue = bus.QueueDeclare("heartRateQueue", exclusive:true);
-            bus.Bind(heartRateExchange, heartRateQueue, "");
-            bus.Consume<HeartRateCommand>(heartRateQueue, (msg, info) =>
+            try
             {
-                if (CurrentHeartRate != msg.Body.HeartRate)
+                var heartRateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.HeartRateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+                var heartRateQueue = bus.QueueDeclare("heartRateQueue", exclusive: true);
+                bus.Bind(heartRateExchange, heartRateQueue, "");
+                bus.Consume<HeartRateCommand>(heartRateQueue, (msg, info) =>
                 {
-                    Console.WriteLine($"Heart.Rx {msg.Body.CommandId} [{msg.Body.HeartRate}]");
-                    CurrentHeartRate = msg.Body.HeartRate / 2; // cut the heart rate in half
-                    bpmSubject.OnNext(msg.Body.HeartRate);
-                }
-            });
+                    if (CurrentHeartRate != msg.Body.HeartRate)
+                    {
+                        Console.WriteLine($"Heart.Rx {msg.Body.CommandId} [{msg.Body.HeartRate}]");
+                        CurrentHeartRate = msg.Body.HeartRate / 2; // cutting the heart rate in half
+                        bpmSubject.OnNext(msg.Body.HeartRate);
+                    }
+                });
 
-            var dimmerControlExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.DimmerControlCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
-            var dimmerControlQueue = bus.QueueDeclare("dimmerControlQueue", exclusive: true);
-            bus.Bind(dimmerControlExchange, dimmerControlQueue, "");
-            bus.Consume<DimmerControlCommand>(dimmerControlQueue, (msg, info) =>
+                var dimmerControlExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.DimmerControlCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+                var dimmerControlQueue = bus.QueueDeclare("dimmerControlQueue", exclusive: true);
+                bus.Bind(dimmerControlExchange, dimmerControlQueue, "");
+                bus.Consume<DimmerControlCommand>(dimmerControlQueue, (msg, info) =>
+                {
+                    if (Config.DimmerValue != msg.Body.DimmerValue)
+                    {
+                        Console.WriteLine($"Dimmer.Rx {msg.Body.CommandId} [{msg.Body.DimmerValue}]");
+                        Config.DimmerValue = msg.Body.DimmerValue;
+                        foreach (LightStrip strip in Config.VerticesLightStrips)
+                        {
+                            strip.Dimmer = Config.DimmerValue;
+                        }
+                        foreach (var k in Config.ChandelierLightStrips.Keys)
+                        {
+                            Config.ChandelierLightStrips[k].Dimmer = Config.DimmerValue;
+                        }
+                        dimmerSubject.OnNext(msg.Body.DimmerValue);
+                    }
+                });
+
+                var colorControlExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+                var colorControlQueue = bus.QueueDeclare("colorControlQueue", exclusive: true);
+                bus.Bind(colorControlExchange, colorControlQueue, "");
+                bus.Consume<ColorControlCommand>(colorControlQueue, (msg, info) =>
+                {
+                    Color cmdColor = Color.FromArgb(msg.Body.ColorRed, msg.Body.ColorGreen, msg.Body.ColorBlue);
+                    if (CurrentColor != cmdColor)
+                    {
+                        Console.WriteLine($"Color.Rx {msg.Body.CommandId} [{msg.Body.ColorRed},{msg.Body.ColorGreen},{msg.Body.ColorBlue}]");
+                        CurrentColor = cmdColor;
+                        colorSubject.OnNext(cmdColor);
+                    }
+                });
+
+                var meditationStateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+                var meditationStateQueue = bus.QueueDeclare("meditationStateQueue", exclusive: true);
+                bus.Bind(meditationStateExchange, meditationStateQueue, "");
+                bus.Consume<MeditationStateCommand>(meditationStateQueue, (msg, info) =>
+                {
+                    Console.WriteLine($"MeditationState.Rx {msg.Body.CommandId} [{msg.Body.State}]");
+                    if ((int)PreviousMediationState == msg.Body.State)
+                        return;
+
+                    var thisState = (MeditationState)msg.Body.State;
+                    lastStateChange = DateTime.UtcNow;
+                    //Set previous values
+                    PreviousMediationState = thisState;
+                    PreviousColor = CurrentColor;
+                    PreviousSecondaryColor = CurrentSecondaryColor;
+                    PreviousTertiaryColor = CurrentTertiaryColor;
+                    //set new colors
+                    CurrentColor = Config.MeditationColors[thisState].Item1; //sets the primary color from the meditation state
+                    CurrentSecondaryColor = Config.MeditationColors[thisState].Item2; //sets the secondary color from the meditation state
+                    CurrentTertiaryColor = Config.MeditationColors[thisState].Item3; //sets the tertiary color from the meditation state
+                    CurrentMediationState = thisState;//record the current state
+
+                    meditationSubject.OnNext(thisState);
+                    // meditationSubject.Subscribe(state => { });
+                    StartChandelierCycle(15, 3);
+
+                    BuildGradientTransition();//build the bitmap so we can get the color for transitioning
+                });
+
+                var eegDataExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
+                var eegDataQueue = bus.QueueDeclare("eegDataQueue", exclusive: true);
+                bus.Bind(eegDataExchange, eegDataQueue, "");
+                bus.Consume<EEGDataCommand>(eegDataQueue, (msg, info) =>
+                {
+                    Console.WriteLine($"EEGData.Rx {msg.Body.CommandId} [{string.Join(", ", msg.Body.Values)}]");
+                });
+
+                hitched_to_bus = true;
+
+                Console.WriteLine("[ ] Hitched to the bus");
+            }
+            catch (Exception ex)
             {
-                if (CurrentHeartRate != msg.Body.DimmerValue)
-                {
-                    Console.WriteLine($"Dimmer.Rx {msg.Body.CommandId} [{msg.Body.DimmerValue}]");
-                    Config.DimmerValue = msg.Body.DimmerValue;
-                    foreach (LightStrip strip in Config.VerticesLightStrips)
-                    {
-                        strip.Dimmer = Config.DimmerValue;
-                    }
-                    foreach (var k in Config.ChandelierLightStrips.Keys)
-                    {
-                        Config.ChandelierLightStrips[k].Dimmer = Config.DimmerValue;
-                    }
-                    dimmerSubject.OnNext(msg.Body.DimmerValue);
-                }
-            });
-
-            var colorControlExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.ColorControlCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
-            var colorControlQueue = bus.QueueDeclare("colorControlQueue", exclusive: true);
-            bus.Bind(colorControlExchange, colorControlQueue, "");
-            bus.Consume<ColorControlCommand>(colorControlQueue, (msg, info) => {
-                Color cmdColor = Color.FromArgb(msg.Body.ColorRed, msg.Body.ColorGreen, msg.Body.ColorBlue);
-                if (CurrentColor != cmdColor)
-                {
-                    Console.WriteLine($"Color.Rx {msg.Body.CommandId} [{msg.Body.ColorRed},{msg.Body.ColorGreen},{msg.Body.ColorBlue}]");
-                    CurrentColor = cmdColor;
-                    colorSubject.OnNext(cmdColor);
-                }
-            });
-
-            var meditationStateExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.MeditationStateCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
-            var meditationStateQueue = bus.QueueDeclare("meditationStateQueue", exclusive: true);
-            bus.Bind(meditationStateExchange, meditationStateQueue, "");
-            bus.Consume<MeditationStateCommand>(meditationStateQueue, (msg, info) => {
-                Console.WriteLine($"MeditationState.Rx {msg.Body.CommandId} [{msg.Body.State}]");
-                var thisState = (MeditationState)msg.Body.State;
-                lastStateChange = DateTime.UtcNow;
-                //Set previous values
-                PreviousMediationState = thisState;
-                PreviousColor = CurrentColor;
-                PreviousSecondaryColor = CurrentSecondaryColor;
-                PreviousTertiaryColor = CurrentTertiaryColor;
-                //set new colors
-                CurrentColor = Config.MeditationColors[thisState].Item1; //sets the primary color from the meditation state
-                CurrentSecondaryColor = Config.MeditationColors[thisState].Item2; //sets the secondary color from the meditation state
-                CurrentTertiaryColor = Config.MeditationColors[thisState].Item3; //sets the tertiary color from the meditation state
-                CurrentMediationState = thisState;//record the current state
-
-                meditationSubject.OnNext(thisState);
-                // meditationSubject.Subscribe(state => { });
-                StartChandelierCycle(15, 3);
-
-                BuildGradientTransition();//build the bitmap so we can get the color for transitioning
-            });
-
-            var eegDataExchange = bus.ExchangeDeclare("MindMurmur.Domain.Messages.EEGDataCommand, MindMurmur.Domain", ExchangeType.Fanout, durable: true);
-            var eegDataQueue = bus.QueueDeclare("eegDataQueue", exclusive: true);
-            bus.Bind(eegDataExchange, eegDataQueue, "");
-            bus.Consume<EEGDataCommand>(eegDataQueue, (msg, info) => {
-                Console.WriteLine($"EEGData.Rx {msg.Body.CommandId} [{string.Join(", ", msg.Body.Values)}]");
-            });
-
-            Console.WriteLine("[ ] Hitched to the bus");
+                hitched_to_bus = false;
+                throw ex;
+            }
         }
 
         public async Task RunTestsTask()
         {
             if (LightDMX != null)
-                await LightDMX.Connect();
+                LightDMX.Connect();
 
             await LightDMX.TestSequence().ConfigureAwait(true);
             await LightDMX.Test().ConfigureAwait(true);
