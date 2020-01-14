@@ -116,6 +116,7 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
         rabbit = RabbitController('localhost', 5672, 'guest', 'guest', '/')
         while not self._stop.is_set():
             self._stop.wait(EMIT_STAGE_PERIOD_SECONDS)
+            prior_state = self.state
             try:
                 data = np.array(self.queue, dtype=np.float64)
                 model = arima_model.ARIMA(data, order=ARIMA_PARAMS)
@@ -136,9 +137,10 @@ class ThreadingOscUDPServer(socketserver.ThreadingMixIn, OscUDPServer):
                 self.levels_advance_upwards = False # auto advance down after downward transition
 
             # send to the bus
-            print("[ ] EMITTING STATE: %s" %(self.state))
-            rabbit.publish_state(self.state)
-            self.state_last_published = datetime.datetime.now()
+            if self.state != prior_state:
+                print("[ ] EMITTING STATE: %s" %(self.state))
+                rabbit.publish_state(self.state)
+                self.state_last_published = datetime.datetime.now()
 
             with self.lock:
                 self.blink_events = 0
