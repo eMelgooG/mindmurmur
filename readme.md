@@ -4,7 +4,7 @@
 
 [Mind Murmur](http://dinafisher.net/mind-murmur/) is an art installation originally exhibited at Burning Man 2018. It will return in 2019.
 
-[Demo video of Mind Murmur in action!](https://youtu.be/ldOr4BrbeaU)
+[Demo video of Mind Murmur in action!](https://youtu.be/8W5Uh0Ms6Nk)
 
 As you meditate on a podium, you wear an EEG headset (Muse headset from 2014), and a machine learning model predicts based on your brainwaves how deeply you are meditating. This gets translated into one of 5 meditation levels which are sent over a RabbitMQ bus on the single laptop that runs the installation. Soundscapes for each of the 5 levels play all around you, drowning out the chaos of life. Your heart rate is fed in and LEDs pulsate in sync. Finally, fractal visuals are played either side of you on the sides of a pyramid.
 
